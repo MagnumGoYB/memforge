@@ -1,0 +1,125 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  GO_VERSION: "1.26.3"
+  MEMFORGE_CACHE_DIR: ${{ github.workspace }}/.cache/memforge
+  GOCACHE: ${{ github.workspace }}/.cache/memforge/go-build
+  GOMODCACHE: ${{ github.workspace }}/.cache/memforge/go-mod
+
+jobs:
+  build:
+    name: Build ${{ matrix.suffix }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - goos: darwin
+            goarch: arm64
+            suffix: darwin-arm64
+            output: memforge-darwin-arm64
+          - goos: darwin
+            goarch: amd64
+            suffix: darwin-amd64
+            output: memforge-darwin-amd64
+          - goos: linux
+            goarch: arm64
+            suffix: linux-arm64
+            output: memforge-linux-arm64
+          - goos: linux
+            goarch: amd64
+            suffix: linux-amd64
+            output: memforge-linux-amd64
+          - goos: windows
+            goarch: arm64
+            suffix: windows-arm64
+            output: memforge-windows-arm64.exe
+          - goos: windows
+            goarch: amd64
+            suffix: windows-amd64
+            output: memforge-windows-amd64.exe
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-go@v6
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+      - name: Build memforge binary
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+          CGO_ENABLED: "0"
+        run: |
+          mkdir -p dist/bin
+          go build -trimpath -o "dist/bin/${{ matrix.output }}" ./cmd/memforge
+      - name: Upload memforge binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.output }}
+          path: dist/bin/${{ matrix.output }}
+          if-no-files-found: error
+
+  package:
+    name: Package plugins and publish release
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-go@v6
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "20"
+      - name: Download built binaries
+        uses: actions/download-artifact@v4
+        with:
+          path: dist/bin
+          merge-multiple: true
+      - name: Validate downloaded binaries
+        run: |
+          test -f dist/bin/memforge-darwin-arm64
+          test -f dist/bin/memforge-darwin-amd64
+          test -f dist/bin/memforge-linux-arm64
+          test -f dist/bin/memforge-linux-amd64
+          test -f dist/bin/memforge-windows-arm64.exe
+          test -f dist/bin/memforge-windows-amd64.exe
+          chmod +x dist/bin/memforge-*
+      - name: Validate repository
+        run: make validate
+      - name: Validate harness
+        run: make test-harness
+      - name: Package Claude Code and Codex plugins
+        run: ./tools/package_plugins.sh
+      - name: Smoke bundled Claude runtime
+        run: |
+          set -euo pipefail
+          mkdir -p dist/smoke/claude-code
+          unzip -q dist/plugins/memforge-claude-code-plugin-v*.zip -d dist/smoke/claude-code
+          test -x dist/smoke/claude-code/memforge/bin/linux-amd64/memforge
+          response=$(printf '%s\n' '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}' | MEMFORGE_HOME="$(mktemp -d)" MEMFORGE_PLUGIN_ROOT="$PWD/dist/smoke/claude-code/memforge" node dist/smoke/claude-code/memforge/bin/memforge-mcp-launcher.js)
+          printf '%s\n' "$response"
+          printf '%s\n' "$response" | grep '"jsonrpc":"2.0"'
+          printf '%s\n' "$response" | grep '"tools"'
+      - name: Publish GitHub release assets
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/bin/memforge-darwin-arm64
+            dist/bin/memforge-darwin-amd64
+            dist/bin/memforge-linux-arm64
+            dist/bin/memforge-linux-amd64
+            dist/bin/memforge-windows-arm64.exe
+            dist/bin/memforge-windows-amd64.exe
+            dist/plugins/memforge-claude-code-plugin-v*.zip
+            dist/plugins/memforge-codex-plugin-v*.zip

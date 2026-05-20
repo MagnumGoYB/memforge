@@ -1,0 +1,68 @@
+name: Bug report
+description: Report incorrect memforge CLI behavior or governance drift
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug. Please remove secrets, private repository paths, prompts, and personal data from logs before submitting.
+  - type: dropdown
+    id: command_area
+    attributes:
+      label: Affected area
+      options:
+        - init
+        - remember
+        - search
+        - context
+        - before
+        - reindex
+        - version/help/bootstrap
+        - governance/harness
+        - Unknown
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: memforge version or commit
+      placeholder: v0.1.0 or commit SHA
+    validations:
+      required: true
+  - type: input
+    id: command
+    attributes:
+      label: Command
+      placeholder: memforge search auth --format json --no-version-check
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: Operating system
+      placeholder: macOS 15 / Ubuntu 24.04 / Windows 11
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: sanitized_logs
+    attributes:
+      label: Sanitized logs or reproduction fixture
+      description: Remove secrets, prompts, private paths, and personal data.
+      render: text
+  - type: textarea
+    id: validation
+    attributes:
+      label: Validation attempted
+      placeholder: make test, make build, make validate, manual CLI repro, etc.

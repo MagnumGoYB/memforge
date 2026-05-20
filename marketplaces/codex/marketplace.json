@@ -1,0 +1,13 @@
+{
+  "name": "memforge-codex-marketplace",
+  "description": "MemForge Codex plugins.",
+  "plugins": [
+    {
+      "name": "memforge",
+      "source": {
+        "source": "local",
+        "path": "./plugins/codex/memforge"
+      }
+    }
+  ]
+}

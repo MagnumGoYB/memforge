@@ -1,0 +1,13 @@
+{
+  "name": "memforge-marketplace",
+  "description": "MemForge Claude Code plugins.",
+  "owner": {
+    "name": "MagnumGOYB"
+  },
+  "plugins": [
+    {
+      "name": "memforge",
+      "source": "./plugins/claude-code/memforge"
+    }
+  ]
+}

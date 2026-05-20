@@ -1,0 +1,11 @@
+{
+  "name": "memforge",
+  "description": "Local-first project memory tools for Claude Code.",
+  "version": "0.1.0",
+  "author": {
+    "name": "MagnumGOYB"
+  },
+  "repository": "https://github.com/MagnumGOYB/memforge",
+  "license": "MIT",
+  "mcpServers": "./.mcp.json"
+}

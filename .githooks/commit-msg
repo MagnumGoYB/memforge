@@ -1,0 +1,2 @@
+#!/bin/sh
+make commitlint COMMIT_MSG_FILE="$1"

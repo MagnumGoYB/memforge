@@ -1,0 +1,87 @@
+# 插件分发
+
+[English](../plugin-distribution.md)
+
+本仓库提供面向 Claude Code 与 Codex 的插件包。发布包面向普通用户的安装方式是 marketplace 或 release bundle；用户不需要先把 `memforge` CLI 安装到 `PATH`。
+
+## Claude Code
+
+Claude Code 支持 plugin marketplaces。本仓库包含：
+
+```txt
+plugins/claude-code/memforge/.claude-plugin/plugin.json
+plugins/claude-code/memforge/.mcp.json
+.claude-plugin/marketplace.json
+```
+
+### 普通用户安装
+
+普通用户路径是通过 marketplace 或 release plugin 安装：
+
+```txt
+/plugin marketplace add <marketplace-or-release-catalog>
+/plugin install memforge@<marketplace-name>
+```
+
+发布版插件包会在插件的 `bin/<platform>/` 目录内包含对应平台的 `memforge` runtime binary。用户在安装 Claude Code marketplace 包之前，不需要运行 `go install`，也不需要把单独安装的 `memforge` binary 放到 `PATH` 上。
+
+插件的 MCP 配置通过 bundled Node launcher 启动 server：
+
+```json
+{
+  "command": "node",
+  "args": ["${CLAUDE_PLUGIN_ROOT}/bin/memforge-mcp-launcher.js"],
+  "env": {
+    "MEMFORGE_PLUGIN_ROOT": "${CLAUDE_PLUGIN_ROOT}"
+  }
+}
+```
+
+Launcher 会解析当前平台，选择 bundled runtime，并从该 runtime 启动 stdio MCP server。
+
+### 本地开发 smoke
+
+从 source checkout 开发时，仍然可以直接在本仓库 smoke 插件：
+
+```bash
+make build
+go install ./cmd/memforge
+claude --plugin-dir ./plugins/claude-code/memforge
+```
+
+这个 source-checkout 流程仅用于本地开发和调试。它不是普通用户安装路径，也不应成为 marketplace/release 安装的前置条件。
+
+## Codex
+
+Codex 支持 plugin manifest 与 marketplace/catalog 安装流程，但公开自助发布仍受限。本仓库提供本地/私有分发包：
+
+```txt
+plugins/codex/memforge/.codex-plugin/plugin.json
+plugins/codex/memforge/.mcp.json
+.agents/plugins/marketplace.json
+```
+
+打包后的 Codex plugin bundle 同样包含各平台的 `memforge` runtime，并通过 MCP 配置使用 `bin/memforge-mcp-launcher.js`。当 Codex host 支持本地/私有 marketplace 或 plugin package 安装时，用户不应需要预先把 `memforge` CLI 安装到 `PATH`。
+
+Codex CLI 0.130 暴露 marketplace 管理，但没有独立的 plugin install/list/details 子命令。开发或调试时的 CLI smoke 可以添加本地 marketplace，并显式注册 MCP server：
+
+```bash
+codex plugin marketplace add <repo-root>
+codex mcp add memforge -- memforge --no-version-check mcp
+```
+
+这个显式 `codex mcp add` 命令只是开发/调试 fallback，不是 packaged plugin 的 runtime path。Codex MCP 配置设置 `default_tools_approval_mode` 为 `approve`，因此非交互 `codex exec` 可以完成 memforge MCP tool call。
+
+## Release 与 CI 打包
+
+GitHub release workflow 会构建多平台 `memforge` binaries，运行仓库与 harness 校验，用 `tools/package_plugins.sh` 打包 Claude Code 和 Codex plugin zips，通过 Node launcher smoke bundled Claude runtime，并把 standalone binaries 与 plugin zip assets 上传到 release。
+
+## 真实 smoke 目标
+
+仓库校验会检查 plugin manifests、launcher 配置、打包和 release workflow 结构。运行时 smoke 应验证：
+
+1. marketplace/release plugin 可以在没有单独 `memforge` binary 位于 `PATH` 的情况下启动。
+2. `bin/memforge-mcp-launcher.js` 会为当前平台选择 bundled runtime。
+3. bundled runtime 能响应 MCP `tools/list`。
+4. `save_memory` 可以持久化 memory。
+5. `search_memory` 可以检索到它。

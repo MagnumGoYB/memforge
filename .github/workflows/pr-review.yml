@@ -1,0 +1,39 @@
+name: PR Review Checklist
+
+on:
+  pull_request_target:
+    types: [opened, reopened, ready_for_review, synchronize]
+
+permissions:
+  pull-requests: write
+  issues: write
+
+jobs:
+  checklist:
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v8
+        with:
+          script: |
+            const marker = '<!-- memforge-review-checklist -->';
+            const body = `${marker}
+            ## memforge Review Checklist
+
+            - [ ] Requirement classification, acceptance criteria, and evidence map are filled.
+            - [ ] Local-first and offline behavior is preserved; no hidden upload, sync, telemetry, or new remote path was added.
+            - [ ] Memories still live outside the user's repository; markdown remains the source of truth and SQLite stays rebuildable.
+            - [ ] CLI automation behavior remains stable, especially JSON output, exit codes, and --no-version-check handling.
+            - [ ] Bugfix work includes a failing test, harness sensor, or clear manual reproduction when practical.
+            - [ ] Release decision is explicit: feature/bugfix changes require follow-up release or explicit deferral; engineering-process-only changes do not.
+            - [ ] Release/build/dependency impact is stated when CI, packaging, or dependencies changed.
+            `;
+            const { owner, repo } = context.repo;
+            const issue_number = context.payload.pull_request.number;
+            const comments = await github.rest.issues.listComments({ owner, repo, issue_number, per_page: 100 });
+            const existing = comments.data.find((comment) => comment.body?.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({ owner, repo, comment_id: existing.id, body });
+            } else {
+              await github.rest.issues.createComment({ owner, repo, issue_number, body });
+            }

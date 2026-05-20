@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "memforge": {
+      "command": "node",
+      "args": ["${CLAUDE_PLUGIN_ROOT}/bin/memforge-mcp-launcher.js"],
+      "env": {
+        "MEMFORGE_PLUGIN_ROOT": "${CLAUDE_PLUGIN_ROOT}"
+      },
+      "default_tools_approval_mode": "approve"
+    }
+  }
+}

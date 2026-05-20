@@ -1,0 +1,23 @@
+# Default owner for open-source review routing.
+* @sosbs
+
+# Core product areas.
+/internal/cli/ @sosbs
+/internal/project/ @sosbs
+/internal/memory/ @sosbs
+/internal/index/ @sosbs
+/internal/compiler/ @sosbs
+/internal/config/ @sosbs
+/internal/buildinfo/ @sosbs
+
+# Governance and repository guardrails.
+/harness/ @sosbs
+/tools/ @sosbs
+/.github/ @sosbs
+/AGENTS.md @sosbs
+/AGENTS.zh-CN.md @sosbs
+/CLAUDE.md @sosbs
+/CLAUDE.zh-CN.md @sosbs
+/Makefile @sosbs
+/plan.md @sosbs
+/plan.zh-CN.md @sosbs
