@@ -43,8 +43,13 @@ func RewriteKindMarkdown(memoriesDir string, kind Kind, records []Record) (Appen
 	for _, record := range records {
 		builder.WriteString(RenderMarkdownBlock(record))
 	}
-	if err := os.WriteFile(path, []byte(builder.String()), 0o644); err != nil {
+	file, err := os.OpenFile(path, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0o644)
+	if err != nil {
 		return AppendResult{}, err
 	}
-	return AppendResult{Path: path}, nil
+	defer file.Close()
+	if _, err := file.WriteString(builder.String()); err != nil {
+		return AppendResult{}, err
+	}
+	return AppendResult{Path: path}, file.Sync()
 }

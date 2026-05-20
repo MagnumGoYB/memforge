@@ -6,7 +6,7 @@
       "name": "memforge",
       "source": {
         "source": "local",
-        "path": "./plugins/codex/memforge"
+        "path": "./dist/plugins/codex/memforge"
       }
     }
   ]

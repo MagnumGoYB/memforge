@@ -79,6 +79,20 @@ func TestCodexPluginPackageIsInstallable(t *testing.T) {
 	if len(marketplace.Plugins) != 1 || marketplace.Plugins[0].Name != "memforge" || marketplace.Plugins[0].Source.Source != "local" || marketplace.Plugins[0].Source.Path != "./dist/plugins/codex/memforge" {
 		t.Fatalf("unexpected Codex marketplace: %#v", marketplace)
 	}
+
+	var altMarketplace struct {
+		Plugins []struct {
+			Name   string `json:"name"`
+			Source struct {
+				Source string `json:"source"`
+				Path   string `json:"path"`
+			} `json:"source"`
+		} `json:"plugins"`
+	}
+	mustReadJSON(t, filepath.Join("marketplaces", "codex", "marketplace.json"), &altMarketplace)
+	if len(altMarketplace.Plugins) != 1 || altMarketplace.Plugins[0].Name != "memforge" || altMarketplace.Plugins[0].Source.Source != "local" || altMarketplace.Plugins[0].Source.Path != "./dist/plugins/codex/memforge" {
+		t.Fatalf("unexpected alternate Codex marketplace: %#v", altMarketplace)
+	}
 }
 
 func TestPluginDistributionDocsAreBilingual(t *testing.T) {
@@ -215,7 +229,10 @@ func TestPluginPackagingAutomationIsPresent(t *testing.T) {
 		"package-plugins",
 		"smoke-plugin-runtime",
 		"./tools/package_plugins.sh",
-		"memforge-mcp-launcher.js",
+		"plugins/claude-code/memforge/bin/memforge-mcp-launcher.js",
+		"smoke-plugin/claude-code/memforge",
+		"$(GO) build -trimpath",
+		"MEMFORGE_PLUGIN_ROOT",
 		"tools/list",
 	} {
 		if !strings.Contains(makefile, expected) {

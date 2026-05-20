@@ -47,6 +47,12 @@ package-plugins:
 	./tools/package_plugins.sh
 
 smoke-plugin-runtime:
-	printf '%s\n' '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}' | MEMFORGE_HOME=$$(mktemp -d) node plugins/claude-code/memforge/bin/memforge-mcp-launcher.js
+	smoke_root="$(MEMFORGE_CACHE_DIR)/smoke-plugin/claude-code/memforge"; \
+	platform="$$($(GO) env GOOS)-$$($(GO) env GOARCH)"; \
+	rm -rf "$$smoke_root"; \
+	mkdir -p "$$smoke_root/bin/$$platform"; \
+	cp plugins/claude-code/memforge/bin/memforge-mcp-launcher.js "$$smoke_root/bin/memforge-mcp-launcher.js"; \
+	GOCACHE=$(GOCACHE) GOMODCACHE=$(GOMODCACHE) $(GO) build -trimpath -o "$$smoke_root/bin/$$platform/memforge" ./cmd/memforge; \
+	printf '%s\n' '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}' | MEMFORGE_HOME=$$(mktemp -d) MEMFORGE_PLUGIN_ROOT="$$smoke_root" node "$$smoke_root/bin/memforge-mcp-launcher.js"
 
 validate: check test build

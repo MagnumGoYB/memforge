@@ -1,6 +1,9 @@
 package cli
 
 import (
+	"fmt"
+	"strings"
+
 	baseconfig "github.com/MagnumGOYB/memforge/internal/config"
 	"github.com/MagnumGOYB/memforge/internal/memory"
 	"github.com/spf13/cobra"
@@ -13,28 +16,33 @@ func loadCompileSettings(projectRoot string) (baseconfig.ProjectSettings, map[me
 	if err != nil {
 		return baseconfig.ProjectSettings{}, nil, err
 	}
-	return settings, parseKindWeights(settings.KindWeights), nil
+	weights, err := parseKindWeights(settings.KindWeights)
+	if err != nil {
+		return baseconfig.ProjectSettings{}, nil, err
+	}
+	return settings, weights, nil
 }
 
-func parseKindWeights(values map[string]int) map[memory.Kind]int {
+func parseKindWeights(values map[string]int) (map[memory.Kind]int, error) {
 	if len(values) == 0 {
-		return nil
+		return nil, nil
 	}
 	weights := make(map[memory.Kind]int, len(values))
 	for key, value := range values {
+		key = strings.TrimSpace(key)
 		if value <= 0 {
 			continue
 		}
 		kind, err := memory.ParseKind(key)
 		if err != nil {
-			continue
+			return nil, fmt.Errorf("invalid kind_weights key %q: %w", key, err)
 		}
 		weights[kind] = value
 	}
 	if len(weights) == 0 {
-		return nil
+		return nil, nil
 	}
-	return weights
+	return weights, nil
 }
 
 func resolveCLIBudget(cmd *cobra.Command, flagValue int, settings baseconfig.ProjectSettings) int {

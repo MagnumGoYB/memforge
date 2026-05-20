@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -63,5 +64,23 @@ func TestExecuteContextUsesProjectDefaultBudget(t *testing.T) {
 	}
 	if payload.Budget != 1200 {
 		t.Fatalf("budget=%d, want 1200", payload.Budget)
+	}
+}
+
+func TestExecuteContextRejectsInvalidProjectKindWeight(t *testing.T) {
+	storage := filepath.Join(t.TempDir(), "storage")
+	t.Setenv("MEMFORGE_HOME", storage)
+	projectRoot := t.TempDir()
+	if err := os.WriteFile(filepath.Join(projectRoot, ".memoryrc"), []byte("[kind_weights]\nunknown = 99\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	code := Execute([]string{"context", "--root", projectRoot, "--format", "json"}, Streams{Stdin: bytes.NewBuffer(nil), Stdout: &stdout, Stderr: &stderr})
+	if code != 1 {
+		t.Fatalf("code=%d stdout=%s stderr=%s", code, stdout.String(), stderr.String())
+	}
+	if !strings.Contains(stderr.String(), "invalid kind_weights key") {
+		t.Fatalf("unexpected stderr: %s", stderr.String())
 	}
 }

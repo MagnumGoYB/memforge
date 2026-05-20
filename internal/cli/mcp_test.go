@@ -102,6 +102,46 @@ func TestExecuteMCPUpsertProjectMemoryUpdatesExistingTitle(t *testing.T) {
 	}
 }
 
+func TestExecuteMCPUpsertProjectMemoryPreservesOtherKindRecords(t *testing.T) {
+	storage := filepath.Join(t.TempDir(), "storage")
+	t.Setenv("MEMFORGE_HOME", storage)
+	projectRoot := t.TempDir()
+	input := strings.Join([]string{
+		`{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"save_memory","arguments":{"kind":"decision","title":"Other decision","content":"Keep this decision.","tags":["keep"]}}}`,
+		`{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"upsert_project_memory","arguments":{"kind":"decision","title":"Updated decision","content":"Write this decision.","tags":["update"]}}}`,
+		`{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"search_memory","arguments":{"query":"decision","limit":10}}}`,
+	}, "\n") + "\n"
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	code := Execute([]string{"mcp", "--root", projectRoot}, Streams{Stdin: strings.NewReader(input), Stdout: &stdout, Stderr: &stderr})
+	if code != 0 {
+		t.Fatalf("code=%d stderr=%s", code, stderr.String())
+	}
+	lines := strings.Split(strings.TrimSpace(stdout.String()), "\n")
+	if len(lines) != 3 {
+		t.Fatalf("unexpected responses: %s", stdout.String())
+	}
+	search := decodeMCPTextPayload(t, lines[2])
+	if got := int(search["count"].(float64)); got != 2 {
+		t.Fatalf("search count=%d, want 2: %v", got, search)
+	}
+	matches, err := filepath.Glob(filepath.Join(storage, "projects", "*", "memories", "decisions.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(matches) != 1 {
+		t.Fatalf("expected one decisions file, got %v", matches)
+	}
+	data, err := os.ReadFile(matches[0])
+	if err != nil {
+		t.Fatal(err)
+	}
+	text := string(data)
+	if !strings.Contains(text, "Other decision") || !strings.Contains(text, "Updated decision") {
+		t.Fatalf("upsert should preserve existing kind records: %s", text)
+	}
+}
+
 func TestExecuteMCPCompileUsesProjectDefaultBudget(t *testing.T) {
 	storage := filepath.Join(t.TempDir(), "storage")
 	t.Setenv("MEMFORGE_HOME", storage)
