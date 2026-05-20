@@ -2,9 +2,11 @@
 
 This plugin connects Codex to `memforge` through its stdio MCP server.
 
+> **Official Codex plugin store:** OpenAI's self-serve plugin publishing is not yet available (marked "coming soon" as of May 2026). MemForge is not listed in the Codex official plugin browser. When public publishing opens and MemForge is accepted, users will be able to install directly via `/plugins` without manual setup.
+
 ## Packaged plugin install
 
-Codex public self-service plugin publishing is still limited, so use a local/private marketplace or Codex host plugin package flow where supported. Packaged plugin bundles include platform-specific `memforge` runtime binaries, so users should not need to run `go install` or put a separate `memforge` CLI on `PATH` for packaged installs.
+Use a local/private marketplace or Codex host plugin package flow where supported. Packaged plugin bundles include platform-specific `memforge` runtime binaries, so users should not need to run `go install` or put a separate `memforge` CLI on `PATH` for packaged installs.
 
 The plugin manifest is at `.codex-plugin/plugin.json`; MCP configuration is in `.mcp.json`. The MCP server starts through `bin/memforge-mcp-launcher.js`, which selects the bundled runtime for the current platform and runs `memforge --no-version-check mcp` from inside the plugin package.
 

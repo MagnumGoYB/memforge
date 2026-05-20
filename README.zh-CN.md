@@ -62,19 +62,34 @@
 
 ### 2. Codex 插件安装
 
-Codex 公开自助 plugin publishing 仍受限，因此 packaged plugin 流程取决于你使用的 Codex host。
+> **Codex 官方插件商店状态：** OpenAI 的自助插件发布尚未开放（截至 2026 年 5 月，OpenAI 文档标注为 "coming soon"）。MemForge 目前未出现在 Codex 官方插件浏览器（`/plugins`）中。当公开发布通道开放且 MemForge 被收录后，用户可直接从 Codex 插件浏览器安装。
 
-当 Codex host 支持本地/私有 marketplace 或 plugin package 安装时，通过该 host 安装打包后的 `plugins/codex/memforge` bundle。这个 packaged bundle 同样包含各平台的 `memforge` runtime，并通过 `bin/memforge-mcp-launcher.js` 启动；用户不应需要预先安装 CLI。
+在此之前，请使用以下路径之一。
 
-对于 Codex CLI 0.130 的开发/调试场景，CLI 暴露 marketplace 管理，但没有 standalone plugin install/list/details 子命令。从源码 checkout 可以使用下面的 fallback smoke 流程：
+**A. 本地/私有 marketplace 或 Codex host 插件包**
+
+当 Codex host 支持本地/私有 marketplace 或 plugin package 安装时，通过该 host 安装打包后的 `plugins/codex/memforge` bundle。打包 bundle 包含各平台的 `memforge` runtime，并通过 `bin/memforge-mcp-launcher.js` 启动；用户不应需要预先安装 CLI。
+
+**B. 直接 MCP 注册（推荐 CLI fallback）**
 
 ```bash
-codex plugin marketplace add "$PWD"
-go install ./cmd/memforge
+go install github.com/MagnumGOYB/memforge/cmd/memforge@latest
 codex mcp add memforge -- memforge --no-version-check mcp
 ```
 
-这个显式 `codex mcp add` fallback 使用 `PATH` 上的 `memforge` binary；它不是 packaged plugin runtime path。当前 Claude Code 与 Codex 分发细节见 `docs/plugin-distribution.md`。
+这使用 `PATH` 上的 `memforge` binary，不是 packaged plugin runtime path。
+
+**C. 本地 marketplace discovery（仅开发/调试）**
+
+Codex CLI 0.130 暴露 marketplace 管理，但没有 standalone `plugin install/list/details` 子命令。从源码 checkout：
+
+```bash
+codex plugin marketplace add "$PWD"
+```
+
+这仅验证 marketplace discovery，不会完成完整的插件安装。
+
+当前 Claude Code 与 Codex 分发细节见 `docs/plugin-distribution.md`。
 
 ### 3. CLI 安装
 

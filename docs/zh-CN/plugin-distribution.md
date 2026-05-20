@@ -54,7 +54,9 @@ claude --plugin-dir ./plugins/claude-code/memforge
 
 ## Codex
 
-Codex 支持 plugin manifest 与 marketplace/catalog 安装流程，但公开自助发布仍受限。本仓库提供本地/私有分发包：
+> **Codex 官方插件商店状态：** OpenAI 的自助插件发布尚未开放（截至 2026 年 5 月，OpenAI 文档标注为 "coming soon"）。MemForge 目前未出现在 Codex 官方插件浏览器（`/plugins`）中。当公开发布通道开放且 MemForge 被收录后，用户可直接从 Codex 插件浏览器安装，无需任何手动配置。
+
+Codex 支持 plugin manifest 与 marketplace/catalog 安装流程。本仓库提供本地/私有分发包：
 
 ```txt
 plugins/codex/memforge/.codex-plugin/plugin.json

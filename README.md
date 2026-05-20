@@ -62,19 +62,34 @@ The release plugin package includes platform-specific `memforge` runtime binarie
 
 ### 2. Codex plugin install
 
-Codex public self-service plugin publishing is still limited, so the packaged plugin flow depends on the Codex host you use.
+> **Official Codex plugin store status:** OpenAI's self-serve plugin publishing is not yet available (marked "coming soon" in OpenAI docs as of May 2026). MemForge is not listed in the Codex official plugin browser (`/plugins`). When public publishing opens and MemForge is accepted, users will be able to install directly from the Codex plugin browser.
 
-When your Codex host supports local/private marketplace or plugin package installation, install the packaged `plugins/codex/memforge` bundle through that host. The packaged bundle includes the same platform-specific `memforge` runtime and uses `bin/memforge-mcp-launcher.js`; users should not need to preinstall the CLI.
+Until then, use one of the paths below.
 
-For Codex CLI 0.130 development/debugging, marketplace management exists but standalone plugin install/list/details commands are not available. Use this fallback smoke flow from a source checkout:
+**A. Local/private marketplace or Codex host plugin package**
+
+When your Codex host supports local/private marketplace or plugin package installation, install the packaged `plugins/codex/memforge` bundle through that host. The packaged bundle includes platform-specific `memforge` runtime binaries and uses `bin/memforge-mcp-launcher.js`; users should not need to preinstall the CLI.
+
+**B. Direct MCP registration (recommended CLI fallback)**
 
 ```bash
-codex plugin marketplace add "$PWD"
-go install ./cmd/memforge
+go install github.com/MagnumGOYB/memforge/cmd/memforge@latest
 codex mcp add memforge -- memforge --no-version-check mcp
 ```
 
-That explicit `codex mcp add` fallback uses a `memforge` binary on `PATH`; it is not the packaged plugin runtime path. See `docs/plugin-distribution.md` for current Claude Code and Codex distribution details.
+This uses a `memforge` binary on `PATH` and is not the packaged plugin runtime path.
+
+**C. Local marketplace discovery (development/debugging only)**
+
+Codex CLI 0.130 exposes marketplace management but no standalone `plugin install/list/details` subcommands. From a source checkout:
+
+```bash
+codex plugin marketplace add "$PWD"
+```
+
+This validates marketplace discovery only; it does not complete a full plugin install.
+
+See `docs/plugin-distribution.md` for detailed Claude Code and Codex distribution information.
 
 ### 3. CLI install
 
