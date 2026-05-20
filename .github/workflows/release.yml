@@ -62,7 +62,7 @@ jobs:
           mkdir -p dist/bin
           go build -trimpath -o "dist/bin/${{ matrix.output }}" ./cmd/memforge
       - name: Upload memforge binary
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.output }}
           path: dist/bin/${{ matrix.output }}
@@ -82,7 +82,7 @@ jobs:
         with:
           node-version: "20"
       - name: Download built binaries
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           path: dist/bin
           merge-multiple: true
@@ -112,7 +112,7 @@ jobs:
           printf '%s\n' "$response" | grep '"jsonrpc":"2.0"'
           printf '%s\n' "$response" | grep '"tools"'
       - name: Publish GitHub release assets
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           files: |
             dist/bin/memforge-darwin-arm64
