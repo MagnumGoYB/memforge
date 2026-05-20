@@ -2,7 +2,7 @@
 
 [中文](README.zh-CN.md)
 
-![memforge overview](README-200k.webp)
+![memforge overview](README-overview-en.webp)
 
 `memforge` is a local-first project memory layer for AI coding agents such as Claude Code, Codex, Cursor, and Gemini CLI.
 
