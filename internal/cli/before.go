@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"strings"
 
-	baseconfig "github.com/MagnumGOYB/memforge/internal/config"
 	"github.com/MagnumGOYB/memforge/internal/compiler"
+	baseconfig "github.com/MagnumGOYB/memforge/internal/config"
 	"github.com/MagnumGOYB/memforge/internal/index"
 	"github.com/MagnumGOYB/memforge/internal/memory"
 	"github.com/MagnumGOYB/memforge/internal/project"

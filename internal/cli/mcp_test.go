@@ -45,8 +45,8 @@ func TestExecuteMCPSaveAndSearchMemory(t *testing.T) {
 	var searchResp struct {
 		Result struct {
 			Content []struct {
-			Text string `json:"text"`
-		} `json:"content"`
+				Text string `json:"text"`
+			} `json:"content"`
 		} `json:"result"`
 	}
 	if err := json.Unmarshal([]byte(lines[1]), &searchResp); err != nil {

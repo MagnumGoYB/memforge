@@ -16,8 +16,8 @@ import (
 )
 
 type afterPayload struct {
-	Candidates     []afterpkg.Candidate    `json:"candidates"`
-	Duplicates     []afterpkg.Duplicate    `json:"duplicates"`
+	Candidates     []afterpkg.Candidate     `json:"candidates"`
+	Duplicates     []afterpkg.Duplicate     `json:"duplicates"`
 	MergeProposals []afterpkg.MergeProposal `json:"merge_proposals"`
 	Persisted      []persistedMemory        `json:"persisted"`
 	Warnings       []string                 `json:"warnings"`

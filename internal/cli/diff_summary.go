@@ -14,9 +14,9 @@ import (
 )
 
 type diffSummaryPayload struct {
-	Files     int              `json:"files"`
-	Added     int              `json:"added"`
-	Deleted   int              `json:"deleted"`
+	Files     int               `json:"files"`
+	Added     int               `json:"added"`
+	Deleted   int               `json:"deleted"`
 	Summaries []fileDiffSummary `json:"summaries"`
 }
 

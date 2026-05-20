@@ -23,12 +23,12 @@ func TestLintCommitMessageAccepts(t *testing.T) {
 
 func TestLintCommitMessageRejects(t *testing.T) {
 	cases := map[string]string{
-		"missing emoji":       "feat(cli): add init command",
-		"wrong emoji":         "🐛 feat(cli): add init command",
-		"unknown type":        "✨ bogus(cli): add init command",
-		"unknown scope":       "✨ feat(unknown-scope): add init command",
-		"empty subject":       "✨ feat(cli): ",
-		"long header":         "✨ feat(cli): " + repeat("x", 200),
+		"missing emoji": "feat(cli): add init command",
+		"wrong emoji":   "🐛 feat(cli): add init command",
+		"unknown type":  "✨ bogus(cli): add init command",
+		"unknown scope": "✨ feat(unknown-scope): add init command",
+		"empty subject": "✨ feat(cli): ",
+		"long header":   "✨ feat(cli): " + repeat("x", 200),
 	}
 	for name, header := range cases {
 		if problems := lintCommitMessage(header); len(problems) == 0 {

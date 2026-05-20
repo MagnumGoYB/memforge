@@ -78,8 +78,8 @@ func (s Server) handle(ctx context.Context, req request) response {
 	case "initialize":
 		resp.Result = map[string]any{
 			"protocolVersion": "2024-11-05",
-			"capabilities": map[string]any{"tools": map[string]any{}},
-			"serverInfo": map[string]any{"name": "memforge", "version": "dev"},
+			"capabilities":    map[string]any{"tools": map[string]any{}},
+			"serverInfo":      map[string]any{"name": "memforge", "version": "dev"},
 		}
 	case "tools/list":
 		resp.Result = map[string]any{"tools": s.Tools}

@@ -60,13 +60,13 @@ func newInitCmd(streams Streams) *cobra.Command {
 			defer db.Close()
 
 			payload := map[string]any{
-				"ok":          true,
-				"project_id":  proj.ID,
-				"project_root": proj.Root,
-				"project_dir": paths.ProjectDir,
-				"meta":        paths.Meta,
-				"index":       paths.Index,
-				"memories_dir": paths.MemoriesDir,
+				"ok":             true,
+				"project_id":     proj.ID,
+				"project_root":   proj.Root,
+				"project_dir":    paths.ProjectDir,
+				"meta":           paths.Meta,
+				"index":          paths.Index,
+				"memories_dir":   paths.MemoriesDir,
 				"schema_version": meta.SchemaVersion,
 			}
 			if settings.Format == baseconfig.FormatJSON {

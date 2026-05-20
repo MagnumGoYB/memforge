@@ -2,6 +2,8 @@
 
 [中文](README.zh-CN.md)
 
+![memforge overview](README-200k.webp)
+
 `memforge` is a local-first project memory layer for AI coding agents such as Claude Code, Codex, Cursor, and Gemini CLI.
 
 It stores structured project memories on the user's machine, indexes them with SQLite + FTS5, and compiles agent-ready context within a token budget. Markdown remains the source of truth; the SQLite index is rebuildable.
