@@ -1,6 +1,24 @@
+# Build artifacts
 /memforge
 dist/
 coverage.out
+
+# Local caches
 .cache/
+
+# OS files
 .DS_Store
+Thumbs.db
+
+# Editor and tool configs
 .superpowers/
+.claude/
+.cursor/
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Environment
+.env
+.env.local
