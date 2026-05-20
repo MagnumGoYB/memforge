@@ -12,14 +12,16 @@ func ExtractSessionText(adapter string, data []byte) (string, error) {
 		return string(data), nil
 	}
 	switch adapter {
-	case "jsonl", "claude-code", "codex", "cursor":
-		return extractJSONLText(data), nil
+	case "jsonl":
+		return extractJSONLText(data, false), nil
+	case "claude-code", "codex", "cursor":
+		return extractJSONLText(data, true), nil
 	default:
 		return "", fmt.Errorf("unknown session adapter %q", adapter)
 	}
 }
 
-func extractJSONLText(data []byte) string {
+func extractJSONLText(data []byte, messagesOnly bool) string {
 	lines := strings.Split(strings.ReplaceAll(string(data), "\r\n", "\n"), "\n")
 	parts := make([]string, 0, len(lines))
 	for _, line := range lines {
@@ -32,9 +34,40 @@ func extractJSONLText(data []byte) string {
 			parts = append(parts, line)
 			continue
 		}
-		collectText(value, &parts)
+		before := len(parts)
+		collectJSONLText(value, &parts, messagesOnly)
+		if len(parts) > before {
+			parts = append(parts, "")
+		}
 	}
-	return strings.Join(parts, "\n")
+	return strings.TrimSpace(strings.Join(parts, "\n"))
+}
+
+func collectJSONLText(value any, parts *[]string, messagesOnly bool) {
+	if messagesOnly {
+		if message, ok := messagePayload(value); ok {
+			collectText(message, parts)
+		}
+		return
+	}
+	collectText(value, parts)
+}
+
+func messagePayload(value any) (any, bool) {
+	obj, ok := value.(map[string]any)
+	if !ok {
+		return nil, false
+	}
+	if message, ok := obj["message"]; ok {
+		return message, true
+	}
+	if role, ok := obj["role"].(string); ok && (role == "assistant" || role == "user") {
+		return obj["content"], true
+	}
+	if typ, ok := obj["type"].(string); ok && typ == "message" {
+		return obj["content"], true
+	}
+	return nil, false
 }
 
 func collectText(value any, parts *[]string) {

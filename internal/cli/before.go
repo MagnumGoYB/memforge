@@ -38,6 +38,11 @@ func newBeforeCmd(streams Streams) *cobra.Command {
 			if err != nil {
 				return userError("%v", err)
 			}
+			projectSettings, kindWeights, err := loadCompileSettings(proj.Root)
+			if err != nil {
+				return userError("%v", err)
+			}
+			resolvedBudget := resolveCLIBudget(cmd, budget, projectSettings)
 			paths := derivePaths(storageRoot, proj)
 			records, err := memory.LoadRecords(paths.MemoriesDir, proj.ID)
 			if err != nil {
@@ -53,7 +58,7 @@ func newBeforeCmd(streams Streams) *cobra.Command {
 				return internalError(err)
 			}
 			selected := selectBeforeRecords(records, matches, args[0])
-			result := compiler.CompileContext(compiler.CompileInput{Memories: selected, Budget: budget, Heading: args[0]})
+			result := compiler.CompileContext(compiler.CompileInput{Memories: selected, Budget: resolvedBudget, Heading: args[0], KindWeights: kindWeights})
 			for _, warning := range result.Warnings {
 				_, _ = fmt.Fprintln(streams.Stderr, warning)
 			}
@@ -66,7 +71,7 @@ func newBeforeCmd(streams Streams) *cobra.Command {
 		},
 	}
 	cmd.Flags().StringVar(&rootOverride, "root", "", "project root override")
-	cmd.Flags().IntVar(&budget, "budget", 3000, "token budget")
+	cmd.Flags().IntVar(&budget, "budget", 0, "token budget")
 	return cmd
 }
 

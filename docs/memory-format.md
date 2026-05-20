@@ -64,6 +64,7 @@ Rules:
 - `context` compiles grouped markdown from stored memories.
 - `before` merges high-priority memories with task-conditioned matches.
 - `after` extracts candidate memories from an explicit session file, reports duplicates and merge proposals, and writes markdown only for explicitly approved candidates.
+- MCP `upsert_project_memory` creates or updates one stable memory by `kind` and normalized `title`, then rebuilds the SQLite index from markdown.
 - `reindex` reparses all markdown blocks and rebuilds the SQLite index.
 
 ## Confidence decay

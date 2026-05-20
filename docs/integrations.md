@@ -30,3 +30,5 @@ The adapters extract text from common `content`, `text`, `message`, `input`, and
 ## MCP
 
 Use `memforge mcp` when the host supports stdio MCP servers. See `docs/mcp.md` for tool schemas.
+
+Installed Claude Code and Codex plugins can call `upsert_project_memory` during an active thread when the agent decides a stable project memory should be saved or updated. This is different from CLI `after`: `after` remains proposal-first and requires explicit approval before persistence.

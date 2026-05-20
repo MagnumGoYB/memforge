@@ -3,6 +3,7 @@ package memory
 import (
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 type AppendResult struct {
@@ -27,4 +28,23 @@ func AppendMarkdown(memoriesDir string, record Record) (AppendResult, error) {
 		return AppendResult{}, err
 	}
 	return AppendResult{Path: path}, file.Sync()
+}
+
+func RewriteKindMarkdown(memoriesDir string, kind Kind, records []Record) (AppendResult, error) {
+	if err := EnsureLayout(memoriesDir); err != nil {
+		return AppendResult{}, err
+	}
+	fileName, ok := FileNameForKind(kind)
+	if !ok {
+		return AppendResult{}, os.ErrInvalid
+	}
+	path := filepath.Join(memoriesDir, fileName)
+	var builder strings.Builder
+	for _, record := range records {
+		builder.WriteString(RenderMarkdownBlock(record))
+	}
+	if err := os.WriteFile(path, []byte(builder.String()), 0o644); err != nil {
+		return AppendResult{}, err
+	}
+	return AppendResult{Path: path}, nil
 }

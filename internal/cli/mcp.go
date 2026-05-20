@@ -44,16 +44,18 @@ func newProjectMCPServer(paths resolvedPaths, proj project.Project) mcp.Server {
 	tools := []mcp.Tool{
 		{Name: "search_memory", Description: "Search project memories", InputSchema: objectSchema(map[string]any{"query": stringSchema(), "kinds": arraySchema(stringSchema()), "limit": integerSchema(), "hybrid": booleanSchema()}, []string{"query"})},
 		{Name: "compile_context", Description: "Compile agent-ready project context", InputSchema: objectSchema(map[string]any{"budget": integerSchema(), "kinds": arraySchema(stringSchema())}, nil)},
-		{Name: "save_memory", Description: "Persist a human-confirmed project memory", InputSchema: objectSchema(map[string]any{"kind": stringSchema(), "title": stringSchema(), "content": stringSchema(), "tags": arraySchema(stringSchema())}, []string{"kind", "title", "content"})},
+		{Name: "save_memory", Description: "Persist a project memory", InputSchema: objectSchema(map[string]any{"kind": stringSchema(), "title": stringSchema(), "content": stringSchema(), "tags": arraySchema(stringSchema())}, []string{"kind", "title", "content"})},
+		{Name: "upsert_project_memory", Description: "Create or update a stable project memory by kind and title", InputSchema: objectSchema(map[string]any{"kind": stringSchema(), "title": stringSchema(), "content": stringSchema(), "tags": arraySchema(stringSchema())}, []string{"kind", "title", "content"})},
 		{Name: "list_constraints", Description: "List high-priority constraint memories", InputSchema: objectSchema(map[string]any{"limit": integerSchema()}, nil)},
 		{Name: "get_project_context", Description: "Compile project context, optionally conditioned on a task", InputSchema: objectSchema(map[string]any{"task": stringSchema(), "budget": integerSchema()}, nil)},
 	}
 	handlers := map[string]mcp.Handler{
-		"search_memory":       handleMCPSearch(paths, proj),
-		"compile_context":     handleMCPCompile(paths, proj),
-		"save_memory":         handleMCPSave(paths, proj),
-		"list_constraints":    handleMCPListConstraints(paths, proj),
-		"get_project_context": handleMCPProjectContext(paths, proj),
+		"search_memory":         handleMCPSearch(paths, proj),
+		"compile_context":       handleMCPCompile(paths, proj),
+		"save_memory":           handleMCPSave(paths, proj),
+		"upsert_project_memory": handleMCPUpsert(paths, proj),
+		"list_constraints":      handleMCPListConstraints(paths, proj),
+		"get_project_context":   handleMCPProjectContext(paths, proj),
 	}
 	return mcp.Server{Tools: tools, Handlers: handlers}
 }
@@ -98,12 +100,17 @@ func handleMCPCompile(paths resolvedPaths, proj project.Project) mcp.Handler {
 		if err != nil {
 			return nil, err
 		}
+		projectSettings, kindWeights, err := loadCompileSettings(proj.Root)
+		if err != nil {
+			return nil, err
+		}
+		budget := resolveBudget(args.Budget, projectSettings)
 		kinds, err := parseKinds(args.Kinds)
 		if err != nil {
 			return nil, err
 		}
-		result := compiler.CompileContext(compiler.CompileInput{Memories: records, Budget: args.Budget, Kinds: kinds})
-		return map[string]any{"budget": args.Budget, "count": len(result.Entries), "context": result.Markdown, "warnings": result.Warnings}, nil
+		result := compiler.CompileContext(compiler.CompileInput{Memories: records, Budget: budget, Kinds: kinds, KindWeights: kindWeights})
+		return map[string]any{"budget": budget, "count": len(result.Entries), "context": result.Markdown, "warnings": result.Warnings}, nil
 	}
 }
 
@@ -131,6 +138,84 @@ func handleMCPSave(paths resolvedPaths, proj project.Project) mcp.Handler {
 		}
 		return map[string]any{"id": record.ID, "kind": record.Kind, "title": record.Title}, nil
 	}
+}
+
+func handleMCPUpsert(paths resolvedPaths, proj project.Project) mcp.Handler {
+	return func(ctx context.Context, raw json.RawMessage) (any, error) {
+		var args struct {
+			Kind    string   `json:"kind"`
+			Title   string   `json:"title"`
+			Content string   `json:"content"`
+			Tags    []string `json:"tags"`
+		}
+		if err := json.Unmarshal(raw, &args); err != nil {
+			return nil, err
+		}
+		kind, err := memory.ParseKind(args.Kind)
+		if err != nil {
+			return nil, err
+		}
+		incoming, err := memory.NewRecord(memory.NewRecordInput{ProjectID: proj.ID, Kind: kind, Title: args.Title, Content: args.Content, Tags: args.Tags, Source: "mcp", Confidence: 1})
+		if err != nil {
+			return nil, err
+		}
+		records, err := memory.LoadRecords(paths.MemoriesDir, proj.ID)
+		if err != nil {
+			return nil, err
+		}
+		kindRecords := make([]memory.Record, 0)
+		action := "created"
+		record := incoming
+		for _, existing := range records {
+			if existing.Kind != kind {
+				continue
+			}
+			if normalizeMemoryTitle(existing.Title) == normalizeMemoryTitle(incoming.Title) {
+				incoming.ID = existing.ID
+				incoming.CreatedAt = existing.CreatedAt
+				record = incoming
+				action = "updated"
+				kindRecords = append(kindRecords, incoming)
+				continue
+			}
+			kindRecords = append(kindRecords, existing)
+		}
+		if action == "created" {
+			kindRecords = append(kindRecords, incoming)
+		}
+		if _, err := memory.RewriteKindMarkdown(paths.MemoriesDir, kind, kindRecords); err != nil {
+			return nil, err
+		}
+		db, err := index.Open(paths.Index)
+		if err != nil {
+			return nil, err
+		}
+		defer db.Close()
+		indexRecords, err := loadIndexRecords(paths.MemoriesDir, proj.ID)
+		if err != nil {
+			return nil, err
+		}
+		if _, err := index.RebuildMemories(ctx, db, indexRecords); err != nil {
+			return nil, err
+		}
+		return map[string]any{"action": action, "id": record.ID, "kind": record.Kind, "title": record.Title}, nil
+	}
+}
+
+func normalizeMemoryTitle(title string) string {
+	return strings.ToLower(strings.Join(strings.Fields(strings.TrimSpace(title)), " "))
+}
+
+func loadIndexRecords(memoriesDir string, projectID string) ([]index.MemoryRecord, error) {
+	records, err := memory.LoadRecords(memoriesDir, projectID)
+	if err != nil {
+		return nil, err
+	}
+	out := make([]index.MemoryRecord, 0, len(records))
+	for _, record := range records {
+		out = append(out, indexRecord(record))
+	}
+	return out, nil
 }
 
 func handleMCPListConstraints(paths resolvedPaths, proj project.Project) mcp.Handler {
@@ -178,6 +263,11 @@ func handleMCPProjectContext(paths resolvedPaths, proj project.Project) mcp.Hand
 		if err != nil {
 			return nil, err
 		}
+		projectSettings, kindWeights, err := loadCompileSettings(proj.Root)
+		if err != nil {
+			return nil, err
+		}
+		budget := resolveBudget(args.Budget, projectSettings)
 		selected := records
 		heading := "Project Context"
 		if strings.TrimSpace(args.Task) != "" {
@@ -193,8 +283,8 @@ func handleMCPProjectContext(paths resolvedPaths, proj project.Project) mcp.Hand
 			}
 			selected = selectBeforeRecords(records, matches, args.Task)
 		}
-		result := compiler.CompileContext(compiler.CompileInput{Memories: selected, Budget: args.Budget, Heading: heading})
-		return map[string]any{"task": args.Task, "count": len(result.Entries), "context": result.Markdown, "warnings": result.Warnings}, nil
+		result := compiler.CompileContext(compiler.CompileInput{Memories: selected, Budget: budget, Heading: heading, KindWeights: kindWeights})
+		return map[string]any{"task": args.Task, "budget": budget, "count": len(result.Entries), "context": result.Markdown, "warnings": result.Warnings}, nil
 	}
 }
 

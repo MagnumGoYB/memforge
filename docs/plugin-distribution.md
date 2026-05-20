@@ -9,8 +9,8 @@ This repository ships plugin packages for Claude Code and Codex. The release pac
 Claude Code supports plugin marketplaces. This repository includes:
 
 ```txt
-plugins/claude-code/memforge/.claude-plugin/plugin.json
-plugins/claude-code/memforge/.mcp.json
+dist/plugins/claude-code/memforge/.claude-plugin/plugin.json
+dist/plugins/claude-code/memforge/.mcp.json
 .claude-plugin/marketplace.json
 ```
 
@@ -25,6 +25,14 @@ The normal user path is a marketplace or release plugin install:
 ```
 
 Release plugin packages include platform-specific `memforge` runtime binaries under the plugin's `bin/<platform>/` directory. Users do not need to run `go install` or put a separately installed `memforge` binary on `PATH` before installing the Claude Code marketplace package.
+
+The `memforge-marketplace` entry points at the packaged bundle under `dist/plugins/claude-code/memforge`, so run `make package-plugins` before adding or refreshing the marketplace from a source checkout:
+
+```bash
+make package-plugins
+claude plugin marketplace add "$PWD"
+claude plugin install memforge@memforge-marketplace
+```
 
 The plugin MCP configuration starts the server through the bundled Node launcher:
 
@@ -59,17 +67,30 @@ This source-checkout flow is for local development and debugging only. It is not
 Codex supports plugin manifests and marketplace/catalog installation flows. This repository includes a local/private distribution package:
 
 ```txt
-plugins/codex/memforge/.codex-plugin/plugin.json
-plugins/codex/memforge/.mcp.json
+dist/plugins/codex/memforge/.codex-plugin/plugin.json
+dist/plugins/codex/memforge/.mcp.json
 .agents/plugins/marketplace.json
 ```
 
 Packaged Codex plugin bundles include the same platform-specific `memforge` runtimes and use `bin/memforge-mcp-launcher.js` through the MCP configuration. Where a Codex host supports local/private marketplace or plugin package installation, users should not need to preinstall the `memforge` CLI on `PATH`.
 
-Codex CLI 0.130 exposes marketplace management but does not provide standalone plugin install/list/details subcommands. The extra `memforge-codex-marketplace` entry appears only if you add this repository as a local/private marketplace for development validation:
+The Codex MCP configuration uses a plugin-root-relative launcher path. It must not rely on Claude Code-specific environment variables:
+
+```json
+{
+  "command": "node",
+  "args": ["./bin/memforge-mcp-launcher.js"],
+  "cwd": ".",
+  "default_tools_approval_mode": "approve"
+}
+```
+
+Codex CLI 0.132 exposes marketplace management and plugin install/remove commands. The `memforge-codex-marketplace` entry points at the packaged bundle under `dist/plugins/codex/memforge`, so run `make package-plugins` before adding or refreshing the marketplace from a source checkout:
 
 ```bash
+make package-plugins
 codex plugin marketplace add "$PWD"
+codex plugin add memforge@memforge-codex-marketplace
 ```
 
 For day-to-day CLI smoke, the simpler fallback is direct MCP registration:

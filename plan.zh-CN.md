@@ -621,9 +621,10 @@ LLM 调用为 opt-in。`init`、`remember`、`search`、`context`、`before` 期
 工具（每个工具必须在 `docs/mcp.md` 发布 JSON Schema）：
 
 ```txt
-search_memory       { query: string, kinds?: string[], limit?: int }
-compile_context     { budget: int, kinds?: string[] }
+search_memory       { query: string, kinds?: string[], limit?: int, hybrid?: bool }
+compile_context     { budget?: int, kinds?: string[] }
 save_memory         { kind: string, title: string, content: string, tags?: string[] }
+upsert_project_memory { kind: string, title: string, content: string, tags?: string[] }
 list_constraints    { limit?: int }
 get_project_context { task?: string, budget?: int }
 ```
@@ -633,10 +634,10 @@ get_project_context { task?: string, budget?: int }
 ```txt
 任务开始   -> compile_context | get_project_context
 编码过程   -> search_memory
-任务收尾   -> save_memory 候选（人工确认）
+任务收尾   -> save_memory 保存明确的新记忆，或 upsert_project_memory 维护 agent 选择的稳定记忆
 ```
 
-MCP server 必须复用 CLI 的相同护栏：无远程网络、不自动扫描、stdout 仅输出 JSON。
+MCP server 必须复用 CLI 的相同护栏：无远程网络、不自动扫描、stdout 仅输出 JSON。Enabled plugin 可以让 agent 在线程执行期间自行决定调用 `upsert_project_memory`，但 CLI `after` 仍保持 proposal-first 与人工确认。
 
 ---
 

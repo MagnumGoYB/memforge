@@ -68,7 +68,7 @@ Until then, use one of the paths below.
 
 **A. Local/private marketplace or Codex host plugin package**
 
-When your Codex host supports local/private marketplace or plugin package installation, install the packaged `plugins/codex/memforge` bundle through that host. The packaged bundle includes platform-specific `memforge` runtime binaries and uses `bin/memforge-mcp-launcher.js`; users should not need to preinstall the CLI.
+When your Codex host supports local/private marketplace or plugin package installation, install the packaged `dist/plugins/codex/memforge` bundle through that host. The packaged bundle includes platform-specific `memforge` runtime binaries and uses `bin/memforge-mcp-launcher.js`; users should not need to preinstall the CLI.
 
 **B. Direct MCP registration (recommended CLI fallback)**
 
@@ -81,13 +81,14 @@ This uses a `memforge` binary on `PATH` and is not the packaged plugin runtime p
 
 **C. Local marketplace discovery (development/debugging only)**
 
-Codex CLI 0.130 exposes marketplace management but no standalone `plugin install/list/details` subcommands. From a source checkout:
+Codex CLI 0.132 exposes marketplace management and plugin install/remove commands. From a packaged checkout after `make package-plugins`:
 
 ```bash
 codex plugin marketplace add "$PWD"
+codex plugin add memforge@memforge-codex-marketplace
 ```
 
-This validates marketplace discovery only; it does not complete a full plugin install.
+This installs the packaged bundle from `dist/plugins/codex/memforge`; it should start without a separate `memforge` binary on `PATH`.
 
 See `docs/plugin-distribution.md` for detailed Claude Code and Codex distribution information.
 
@@ -145,6 +146,21 @@ MEMFORGE_HOME=/absolute/path make run ARGS="diff-summary --from /absolute/path/n
 MEMFORGE_HOME=/absolute/path make run ARGS="debug paths --format json --no-version-check"
 ```
 
+## Project configuration
+
+`context`, `before`, and MCP context tools read optional TOML configuration from the user config file and project root:
+
+```toml
+default_budget = 1200
+
+[kind_weights]
+decision = 99
+bugfix = 95
+constraint = 100
+```
+
+Project `.memoryrc` overrides `$XDG_CONFIG_HOME/memforge/config.toml`. CLI `--budget` and MCP tool `budget` arguments override both. Configuration never stores memory content; memories still live only under `MEMFORGE_HOME` or `$XDG_DATA_HOME/memforge`.
+
 ## AI agent contract
 
 For automation and agent-driven usage, prefer:
@@ -168,6 +184,7 @@ Rules:
 - SQLite is a rebuildable index layer.
 - MVP commands do not make opt-in LLM/provider calls.
 - `after` is proposal-first: it extracts candidate memories from an explicit session file and persists only when `--approve` is provided.
+- Enabled MCP plugins may let the agent create or update stable project memories during a thread through `upsert_project_memory`; this still requires an explicit tool call, never auto-scans the repository, and never calls remote providers.
 - Provider-backed extraction is opt-in and scoped to `after`; other commands stay local/offline.
 - Hybrid search is explicit via `search --hybrid` and uses local deterministic embeddings by default.
 - Session adapters and diff summaries are local transformations over explicitly supplied files or local git output.

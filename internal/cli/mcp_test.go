@@ -3,6 +3,7 @@ package cli
 import (
 	"bytes"
 	"encoding/json"
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -55,4 +56,97 @@ func TestExecuteMCPSaveAndSearchMemory(t *testing.T) {
 	if len(searchResp.Result.Content) != 1 || !strings.Contains(searchResp.Result.Content[0].Text, "Repository decision") {
 		t.Fatalf("unexpected search response: %s", lines[1])
 	}
+}
+
+func TestExecuteMCPUpsertProjectMemoryUpdatesExistingTitle(t *testing.T) {
+	storage := filepath.Join(t.TempDir(), "storage")
+	t.Setenv("MEMFORGE_HOME", storage)
+	projectRoot := t.TempDir()
+	input := strings.Join([]string{
+		`{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"upsert_project_memory","arguments":{"kind":"decision","title":"Plugin memory policy","content":"Agents may save stable memories from active threads.","tags":["plugin"]}}}`,
+		`{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"upsert_project_memory","arguments":{"kind":"decision","title":"Plugin memory policy","content":"Agents may save or update stable memories from active Claude Code and Codex threads.","tags":["plugin","automation"]}}}`,
+		`{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"search_memory","arguments":{"query":"Claude Code Codex threads","limit":5}}}`,
+	}, "\n") + "\n"
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	code := Execute([]string{"mcp", "--root", projectRoot}, Streams{Stdin: strings.NewReader(input), Stdout: &stdout, Stderr: &stderr})
+	if code != 0 {
+		t.Fatalf("code=%d stderr=%s", code, stderr.String())
+	}
+	lines := strings.Split(strings.TrimSpace(stdout.String()), "\n")
+	if len(lines) != 3 {
+		t.Fatalf("unexpected responses: %s", stdout.String())
+	}
+	first := decodeMCPTextPayload(t, lines[0])
+	second := decodeMCPTextPayload(t, lines[1])
+	if first["action"] != "created" || second["action"] != "updated" || first["id"] != second["id"] {
+		t.Fatalf("unexpected upsert actions: first=%v second=%v", first, second)
+	}
+	search := decodeMCPTextPayload(t, lines[2])
+	if got := int(search["count"].(float64)); got != 1 {
+		t.Fatalf("search count=%d, want 1: %v", got, search)
+	}
+	matches, err := filepath.Glob(filepath.Join(storage, "projects", "*", "memories", "decisions.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(matches) != 1 {
+		t.Fatalf("expected one decisions file, got %v", matches)
+	}
+	data, err := os.ReadFile(matches[0])
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Count(string(data), "<!-- memforge:memory ") != 1 || !strings.Contains(string(data), "Claude Code and Codex threads") {
+		t.Fatalf("memory file should contain one updated block: %s", string(data))
+	}
+}
+
+func TestExecuteMCPCompileUsesProjectDefaultBudget(t *testing.T) {
+	storage := filepath.Join(t.TempDir(), "storage")
+	t.Setenv("MEMFORGE_HOME", storage)
+	projectRoot := t.TempDir()
+	if err := os.WriteFile(filepath.Join(projectRoot, ".memoryrc"), []byte("default_budget = 1400\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	input := strings.Join([]string{
+		`{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"save_memory","arguments":{"kind":"manual","title":"Manual note","content":"manual note body"}}}`,
+		`{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"compile_context","arguments":{}}}`,
+	}, "\n") + "\n"
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	code := Execute([]string{"mcp", "--root", projectRoot}, Streams{Stdin: strings.NewReader(input), Stdout: &stdout, Stderr: &stderr})
+	if code != 0 {
+		t.Fatalf("code=%d stderr=%s", code, stderr.String())
+	}
+	lines := strings.Split(strings.TrimSpace(stdout.String()), "\n")
+	if len(lines) != 2 {
+		t.Fatalf("unexpected responses: %s", stdout.String())
+	}
+	payload := decodeMCPTextPayload(t, lines[1])
+	if got := int(payload["budget"].(float64)); got != 1400 {
+		t.Fatalf("budget=%d, want 1400: %v", got, payload)
+	}
+}
+
+func decodeMCPTextPayload(t *testing.T, line string) map[string]any {
+	t.Helper()
+	var resp struct {
+		Result struct {
+			Content []struct {
+				Text string `json:"text"`
+			} `json:"content"`
+		} `json:"result"`
+	}
+	if err := json.Unmarshal([]byte(line), &resp); err != nil {
+		t.Fatal(err)
+	}
+	if len(resp.Result.Content) != 1 {
+		t.Fatalf("unexpected MCP response: %s", line)
+	}
+	var payload map[string]any
+	if err := json.Unmarshal([]byte(resp.Result.Content[0].Text), &payload); err != nil {
+		t.Fatal(err)
+	}
+	return payload
 }

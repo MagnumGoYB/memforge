@@ -68,7 +68,7 @@
 
 **A. 本地/私有 marketplace 或 Codex host 插件包**
 
-当 Codex host 支持本地/私有 marketplace 或 plugin package 安装时，通过该 host 安装打包后的 `plugins/codex/memforge` bundle。打包 bundle 包含各平台的 `memforge` runtime，并通过 `bin/memforge-mcp-launcher.js` 启动；用户不应需要预先安装 CLI。
+当 Codex host 支持本地/私有 marketplace 或 plugin package 安装时，通过该 host 安装打包后的 `dist/plugins/codex/memforge` bundle。打包 bundle 包含各平台的 `memforge` runtime，并通过 `bin/memforge-mcp-launcher.js` 启动；用户不应需要预先安装 CLI。
 
 **B. 直接 MCP 注册（推荐 CLI fallback）**
 
@@ -81,13 +81,14 @@ codex mcp add memforge -- memforge --no-version-check mcp
 
 **C. 本地 marketplace discovery（仅开发/调试）**
 
-Codex CLI 0.130 暴露 marketplace 管理，但没有 standalone `plugin install/list/details` 子命令。从源码 checkout：
+Codex CLI 0.132 暴露 marketplace 管理和 plugin install/remove 命令。在运行 `make package-plugins` 后，从打包 checkout：
 
 ```bash
 codex plugin marketplace add "$PWD"
+codex plugin add memforge@memforge-codex-marketplace
 ```
 
-这仅验证 marketplace discovery，不会完成完整的插件安装。
+这会从 `dist/plugins/codex/memforge` 安装打包 bundle；它不应依赖 `PATH` 上的单独 `memforge` binary。
 
 当前 Claude Code 与 Codex 分发细节见 `docs/plugin-distribution.md`。
 
@@ -145,6 +146,21 @@ MEMFORGE_HOME=/absolute/path make run ARGS="diff-summary --from /absolute/path/n
 MEMFORGE_HOME=/absolute/path make run ARGS="debug paths --format json --no-version-check"
 ```
 
+## 项目配置
+
+`context`、`before` 以及 MCP context tools 会读取用户配置文件和项目根目录下的可选 TOML 配置：
+
+```toml
+default_budget = 1200
+
+[kind_weights]
+decision = 99
+bugfix = 95
+constraint = 100
+```
+
+项目 `.memoryrc` 会覆盖 `$XDG_CONFIG_HOME/memforge/config.toml`。CLI `--budget` 和 MCP tool 的 `budget` 参数会覆盖两者。配置不存储 memory 内容；memory 仍只保存在 `MEMFORGE_HOME` 或 `$XDG_DATA_HOME/memforge` 下。
+
 ## AI agent 调用约定
 
 对自动化和 agent 调用，优先使用：
@@ -168,6 +184,7 @@ memforge --no-version-check <command> --format json
 - SQLite 只是可重建的索引层。
 - MVP 命令不会触发 opt-in LLM/provider 调用。
 - `after` 是 proposal-first：它只从显式提供的 session 文件提取 candidate memories，只有传入 `--approve` 才会持久化。
+- enabled MCP plugin 可以让 agent 在 thread 执行期间通过 `upsert_project_memory` 创建或更新稳定 project memories；这仍需要明确 tool call，不会自动扫描仓库，也不会调用远程 provider。
 - provider-backed extraction 是 opt-in，且仅限 `after`；其他命令保持本地/离线。
 - Hybrid search 必须显式使用 `search --hybrid`，默认使用本地 deterministic embeddings。
 - Session adapters 与 diff summaries 都只是对显式提供的文件或本地 git 输出做本地转换。

@@ -26,7 +26,8 @@ Input schema:
   "properties": {
     "query": { "type": "string" },
     "kinds": { "type": "array", "items": { "type": "string" } },
-    "limit": { "type": "integer", "minimum": 0 }
+    "limit": { "type": "integer", "minimum": 0 },
+    "hybrid": { "type": "boolean" }
   }
 }
 ```
@@ -48,7 +49,7 @@ Input schema:
 }
 ```
 
-Returns agent-ready markdown context compiled from stored memories.
+Returns agent-ready markdown context compiled from stored memories. When `budget` is omitted or `0`, the server uses project configuration (`.memoryrc` or user config) and then the built-in default.
 
 ### `save_memory`
 
@@ -68,7 +69,29 @@ Input schema:
 }
 ```
 
-Persists a human-confirmed memory through the same markdown-first path as `remember`.
+Persists a new project memory through the same markdown-first path as `remember`. Agents should prefer `upsert_project_memory` when they may be updating an existing memory.
+
+### `upsert_project_memory`
+
+Input schema:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["kind", "title", "content"],
+  "properties": {
+    "kind": { "type": "string" },
+    "title": { "type": "string" },
+    "content": { "type": "string" },
+    "tags": { "type": "array", "items": { "type": "string" } }
+  }
+}
+```
+
+Creates or updates a stable project memory by `kind` and normalized `title`. It returns `action: "created"` or `action: "updated"` with the memory id.
+
+Enabled Claude Code and Codex plugins may use this tool during an active thread when the agent determines a durable project memory should be created or revised. The tool is still bounded by MCP tool approval and local storage rules: it does not auto-scan source files and it does not call remote providers.
 
 ### `list_constraints`
 
@@ -101,4 +124,4 @@ Input schema:
 }
 ```
 
-When `task` is empty, this behaves like `compile_context`. When `task` is present, it uses the same task-conditioned selection strategy as `before`.
+When `task` is empty, this behaves like `compile_context`. When `task` is present, it uses the same task-conditioned selection strategy as `before`. When `budget` is omitted or `0`, project configuration supplies the default.
