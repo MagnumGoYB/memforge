@@ -21,6 +21,7 @@ plugins/claude-code/memforge/.mcp.json
 ```txt
 /plugin marketplace add <marketplace-or-release-catalog>
 /plugin install memforge@<marketplace-name>
+/reload-plugins
 ```
 
 发布版插件包会在插件的 `bin/<platform>/` 目录内包含对应平台的 `memforge` runtime binary。用户在安装 Claude Code marketplace 包之前，不需要运行 `go install`，也不需要把单独安装的 `memforge` binary 放到 `PATH` 上。
@@ -63,14 +64,20 @@ plugins/codex/memforge/.mcp.json
 
 打包后的 Codex plugin bundle 同样包含各平台的 `memforge` runtime，并通过 MCP 配置使用 `bin/memforge-mcp-launcher.js`。当 Codex host 支持本地/私有 marketplace 或 plugin package 安装时，用户不应需要预先把 `memforge` CLI 安装到 `PATH`。
 
-Codex CLI 0.130 暴露 marketplace 管理，但没有独立的 plugin install/list/details 子命令。开发或调试时的 CLI smoke 可以添加本地 marketplace，并显式注册 MCP server：
+Codex CLI 0.130 暴露 marketplace 管理，但没有独立的 plugin install/list/details 子命令。只有在把本仓库作为本地/私有 marketplace 加入以验证 discovery 时，才会出现额外的 `memforge-codex-marketplace` entry：
 
 ```bash
-codex plugin marketplace add <repo-root>
+codex plugin marketplace add "$PWD"
+```
+
+日常 CLI smoke 更简单的 fallback 是直接注册 MCP server：
+
+```bash
+go install ./cmd/memforge
 codex mcp add memforge -- memforge --no-version-check mcp
 ```
 
-这个显式 `codex mcp add` 命令只是开发/调试 fallback，不是 packaged plugin 的 runtime path。Codex MCP 配置设置 `default_tools_approval_mode` 为 `approve`，因此非交互 `codex exec` 可以完成 memforge MCP tool call。
+直接 `codex mcp add` 可以避免额外保留一个本地 marketplace entry，但它只是开发/调试 fallback，不是 packaged plugin 的 runtime path。它使用 `PATH` 上的 `memforge` binary；打包后的 Codex plugin bundle 使用 bundled launcher。Codex MCP 配置设置 `default_tools_approval_mode` 为 `approve`，因此非交互 `codex exec` 可以完成 memforge MCP tool call。
 
 ## Release 与 CI 打包
 

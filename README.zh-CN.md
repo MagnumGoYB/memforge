@@ -44,15 +44,39 @@
 
 ## 安装
 
-### Agent 插件安装
+根据使用方式选择一条路径。
 
-对 Claude Code 来说，普通用户路径是通过 marketplace 或 release plugin 安装。插件包包含各平台的 `memforge` runtime binary，并通过 `bin/memforge-mcp-launcher.js` 启动 MCP，因此用户不需要先运行 `go install`，也不需要把单独的 `memforge` CLI 放到 `PATH` 上。
+### 1. Claude Code 插件安装
 
-Codex packaged plugin bundle 包含相同 runtime，但公开自助发布仍受限；在宿主支持时使用本地/私有 marketplace 或 Codex host plugin package 流程。当前 Claude Code 与 Codex 分发细节见 `docs/plugin-distribution.md`。
+这是 Claude Code 用户推荐路径。通过 Claude Code marketplace 或 release catalog 安装插件：
 
-### CLI 与源码开发安装
+```txt
+/plugin marketplace add <marketplace-or-release-catalog>
+/plugin install memforge@<marketplace-name>
+/reload-plugins
+```
 
-CLI/source build 要求：
+发布版插件包包含各平台的 `memforge` runtime binary，并通过 `bin/memforge-mcp-launcher.js` 启动 MCP。用户不需要先运行 `go install`，也不需要把单独的 `memforge` CLI 放到 `PATH` 上。
+
+### 2. Codex 插件安装
+
+Codex 公开自助 plugin publishing 仍受限，因此 packaged plugin 流程取决于你使用的 Codex host。
+
+当 Codex host 支持本地/私有 marketplace 或 plugin package 安装时，通过该 host 安装打包后的 `plugins/codex/memforge` bundle。这个 packaged bundle 同样包含各平台的 `memforge` runtime，并通过 `bin/memforge-mcp-launcher.js` 启动；用户不应需要预先安装 CLI。
+
+对于 Codex CLI 0.130 的开发/调试场景，CLI 暴露 marketplace 管理，但没有 standalone plugin install/list/details 子命令。从源码 checkout 可以使用下面的 fallback smoke 流程：
+
+```bash
+codex plugin marketplace add "$PWD"
+go install ./cmd/memforge
+codex mcp add memforge -- memforge --no-version-check mcp
+```
+
+这个显式 `codex mcp add` fallback 使用 `PATH` 上的 `memforge` binary；它不是 packaged plugin runtime path。当前 Claude Code 与 Codex 分发细节见 `docs/plugin-distribution.md`。
+
+### 3. CLI 安装
+
+要求：
 
 - Go 1.26.3 或更新版本
 

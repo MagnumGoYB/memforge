@@ -46,15 +46,39 @@ Implemented now:
 
 ## Installation
 
-### Agent plugin installs
+Choose one path based on how you want to use `memforge`.
 
-For Claude Code, the normal user path is a marketplace or release plugin install. The plugin package includes platform-specific `memforge` runtime binaries and starts MCP through `bin/memforge-mcp-launcher.js`, so users do not run `go install` first and do not need a separate `memforge` CLI on `PATH`.
+### 1. Claude Code plugin install
 
-Codex packaged plugin bundles include the same runtime, but public self-service publishing is still limited; use local/private marketplace or Codex host plugin package support where available. See `docs/plugin-distribution.md` for the current Claude Code and Codex distribution details.
+This is the recommended path for Claude Code users. Install the plugin from a Claude Code marketplace or release catalog:
 
-### CLI and source development installs
+```txt
+/plugin marketplace add <marketplace-or-release-catalog>
+/plugin install memforge@<marketplace-name>
+/reload-plugins
+```
 
-Requirements for CLI/source builds:
+The release plugin package includes platform-specific `memforge` runtime binaries and starts MCP through `bin/memforge-mcp-launcher.js`. You do not run `go install` first, and you do not need a separate `memforge` CLI on `PATH`.
+
+### 2. Codex plugin install
+
+Codex public self-service plugin publishing is still limited, so the packaged plugin flow depends on the Codex host you use.
+
+When your Codex host supports local/private marketplace or plugin package installation, install the packaged `plugins/codex/memforge` bundle through that host. The packaged bundle includes the same platform-specific `memforge` runtime and uses `bin/memforge-mcp-launcher.js`; users should not need to preinstall the CLI.
+
+For Codex CLI 0.130 development/debugging, marketplace management exists but standalone plugin install/list/details commands are not available. Use this fallback smoke flow from a source checkout:
+
+```bash
+codex plugin marketplace add "$PWD"
+go install ./cmd/memforge
+codex mcp add memforge -- memforge --no-version-check mcp
+```
+
+That explicit `codex mcp add` fallback uses a `memforge` binary on `PATH`; it is not the packaged plugin runtime path. See `docs/plugin-distribution.md` for current Claude Code and Codex distribution details.
+
+### 3. CLI install
+
+Requirements:
 
 - Go 1.26.3 or newer
 

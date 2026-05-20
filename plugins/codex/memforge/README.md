@@ -16,16 +16,19 @@ export MEMFORGE_HOME="$HOME/.local/share/memforge"
 
 ## Codex CLI development smoke
 
-Codex CLI 0.130 exposes marketplace management but no standalone `plugin install/list/details` subcommands. For CLI smoke usage during development or debugging, add the local marketplace:
+Codex CLI 0.130 exposes marketplace management but no standalone `plugin install/list/details` subcommands. The extra `memforge-codex-marketplace` entry comes from adding this repository as a local/private marketplace for development validation.
+
+Use that marketplace entry only when you need to test marketplace discovery:
 
 ```bash
 codex plugin marketplace add "$PWD"
 ```
 
-If the host plugin flow is unavailable, register the MCP server explicitly as a development/debugging fallback:
+For day-to-day CLI development smoke, the simpler fallback is to register the MCP server directly:
 
 ```bash
+go install ./cmd/memforge
 codex mcp add memforge -- memforge --no-version-check mcp
 ```
 
-That explicit MCP registration path uses a `memforge` binary on `PATH` and is not the packaged plugin runtime path. The Codex MCP config uses `default_tools_approval_mode: approve` so non-interactive `codex exec` can complete memforge MCP tool calls.
+Direct `codex mcp add` avoids carrying an extra local marketplace entry, but it uses a `memforge` binary on `PATH` and is not the packaged plugin runtime path. The Codex MCP config uses `default_tools_approval_mode: approve` so non-interactive `codex exec` can complete memforge MCP tool calls.

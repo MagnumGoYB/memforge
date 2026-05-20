@@ -21,6 +21,7 @@ The normal user path is a marketplace or release plugin install:
 ```txt
 /plugin marketplace add <marketplace-or-release-catalog>
 /plugin install memforge@<marketplace-name>
+/reload-plugins
 ```
 
 Release plugin packages include platform-specific `memforge` runtime binaries under the plugin's `bin/<platform>/` directory. Users do not need to run `go install` or put a separately installed `memforge` binary on `PATH` before installing the Claude Code marketplace package.
@@ -63,14 +64,20 @@ plugins/codex/memforge/.mcp.json
 
 Packaged Codex plugin bundles include the same platform-specific `memforge` runtimes and use `bin/memforge-mcp-launcher.js` through the MCP configuration. Where a Codex host supports local/private marketplace or plugin package installation, users should not need to preinstall the `memforge` CLI on `PATH`.
 
-Codex CLI 0.130 exposes marketplace management but does not provide standalone plugin install/list/details subcommands. For CLI smoke usage during development or debugging, add the local marketplace and register the MCP server explicitly:
+Codex CLI 0.130 exposes marketplace management but does not provide standalone plugin install/list/details subcommands. The extra `memforge-codex-marketplace` entry appears only if you add this repository as a local/private marketplace for development validation:
 
 ```bash
-codex plugin marketplace add <repo-root>
+codex plugin marketplace add "$PWD"
+```
+
+For day-to-day CLI smoke, the simpler fallback is direct MCP registration:
+
+```bash
+go install ./cmd/memforge
 codex mcp add memforge -- memforge --no-version-check mcp
 ```
 
-That explicit `codex mcp add` command is a development/debugging fallback, not the packaged plugin runtime path. The Codex MCP config sets `default_tools_approval_mode` to `approve` so non-interactive `codex exec` can complete memforge MCP tool calls.
+Direct `codex mcp add` avoids carrying an extra local marketplace entry, but it is a development/debugging fallback rather than the packaged plugin runtime path. It uses the `memforge` binary on `PATH`; packaged Codex plugin bundles use the bundled launcher instead. The Codex MCP config sets `default_tools_approval_mode` to `approve` so non-interactive `codex exec` can complete memforge MCP tool calls.
 
 ## Release and CI packaging
 
