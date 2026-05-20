@@ -5,7 +5,7 @@ GOMODCACHE ?= $(MEMFORGE_CACHE_DIR)/go-mod
 COMMIT_MSG_FILE ?= .git/COMMIT_EDITMSG
 COMMIT_RANGE ?=
 
-.PHONY: setup check test test-packages test-harness vet build run validate validate-pr-body commitlint commitlint-range package-plugins smoke-plugin-runtime
+.PHONY: setup check test test-packages test-harness vet build run validate validate-pr-body commitlint commitlint-range build-plugin-binaries package-plugins smoke-plugin-runtime
 
 setup:
 	git config core.hooksPath .githooks
@@ -43,7 +43,16 @@ commitlint-range:
 	@test -n "$(COMMIT_RANGE)" || (echo 'COMMIT_RANGE is required, for example: make commitlint-range COMMIT_RANGE="origin/main..HEAD"' >&2; exit 2)
 	GOCACHE=$(GOCACHE) GOMODCACHE=$(GOMODCACHE) $(GO) run ./tools/commitlint --range "$(COMMIT_RANGE)"
 
-package-plugins:
+build-plugin-binaries:
+	mkdir -p dist/bin
+	GOOS=darwin GOARCH=arm64 CGO_ENABLED=0 GOCACHE=$(GOCACHE) GOMODCACHE=$(GOMODCACHE) $(GO) build -trimpath -o dist/bin/memforge-darwin-arm64 ./cmd/memforge
+	GOOS=darwin GOARCH=amd64 CGO_ENABLED=0 GOCACHE=$(GOCACHE) GOMODCACHE=$(GOMODCACHE) $(GO) build -trimpath -o dist/bin/memforge-darwin-amd64 ./cmd/memforge
+	GOOS=linux GOARCH=arm64 CGO_ENABLED=0 GOCACHE=$(GOCACHE) GOMODCACHE=$(GOMODCACHE) $(GO) build -trimpath -o dist/bin/memforge-linux-arm64 ./cmd/memforge
+	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 GOCACHE=$(GOCACHE) GOMODCACHE=$(GOMODCACHE) $(GO) build -trimpath -o dist/bin/memforge-linux-amd64 ./cmd/memforge
+	GOOS=windows GOARCH=arm64 CGO_ENABLED=0 GOCACHE=$(GOCACHE) GOMODCACHE=$(GOMODCACHE) $(GO) build -trimpath -o dist/bin/memforge-windows-arm64.exe ./cmd/memforge
+	GOOS=windows GOARCH=amd64 CGO_ENABLED=0 GOCACHE=$(GOCACHE) GOMODCACHE=$(GOMODCACHE) $(GO) build -trimpath -o dist/bin/memforge-windows-amd64.exe ./cmd/memforge
+
+package-plugins: build-plugin-binaries
 	./tools/package_plugins.sh
 
 smoke-plugin-runtime:

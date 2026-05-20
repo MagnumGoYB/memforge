@@ -228,9 +228,13 @@ func TestPluginPackagingAutomationIsPresent(t *testing.T) {
 
 	makefile := read(t, "Makefile")
 	for _, expected := range []string{
+		"build-plugin-binaries",
 		"package-plugins",
 		"smoke-plugin-runtime",
 		"./tools/package_plugins.sh",
+		"GOOS=darwin GOARCH=arm64",
+		"GOOS=windows GOARCH=amd64",
+		"package-plugins: build-plugin-binaries",
 		"plugins/claude-code/memforge/bin/memforge-mcp-launcher.js",
 		"smoke-plugin/claude-code/memforge",
 		"$(GO) build -trimpath",
