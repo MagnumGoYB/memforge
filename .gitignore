@@ -5,6 +5,7 @@ coverage.out
 
 # Local caches
 .cache/
+.worktrees/
 
 # OS files
 .DS_Store

@@ -30,3 +30,25 @@ The adapters extract text from common `content`, `text`, `message`, `input`, and
 ## MCP
 
 Use `memforge mcp` when the host supports stdio MCP servers. See `docs/mcp.md` for tool schemas.
+
+## Shared memory acceptance
+
+Claude Code and Codex share memforge memories when they use the same absolute `MEMFORGE_HOME` and resolve the same project root. Validate sharing with an explicit storage root and `--root` so the test does not depend on either host's working directory or private memory system.
+
+```bash
+export MEMFORGE_HOME="/absolute/path/to/memforge-home"
+
+# In Claude Code, or a shell standing in for Claude Code:
+memforge --no-version-check --root /absolute/path/to/project remember \
+  --kind decision \
+  --title "Shared memory smoke" \
+  --format json \
+  "Claude Code and Codex can read this memory through the same memforge store."
+
+# In Codex, or a shell standing in for Codex:
+memforge --no-version-check --root /absolute/path/to/project search \
+  --format json \
+  "Shared memory smoke"
+```
+
+Acceptance passes when the second command returns the saved title from the same `MEMFORGE_HOME` and same project root. Repeat the smoke in the opposite direction when validating both installed plugins: save through Codex, then search through Claude Code. If either side uses a different storage root, project root, or project identifier, the memories are intentionally isolated rather than shared.

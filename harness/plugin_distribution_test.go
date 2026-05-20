@@ -86,6 +86,35 @@ func TestPluginDistributionDocsAreBilingual(t *testing.T) {
 	}
 }
 
+func TestAgentIntegrationDocsDefineSharedMemoryAcceptance(t *testing.T) {
+	cases := map[string][]string{
+		filepath.Join("docs", "integrations.md"): {
+			"## Shared memory acceptance",
+			"export MEMFORGE_HOME=\"/absolute/path/to/memforge-home\"",
+			"memforge --no-version-check --root /absolute/path/to/project remember",
+			"memforge --no-version-check --root /absolute/path/to/project search",
+			"same absolute `MEMFORGE_HOME`",
+			"same project root",
+		},
+		filepath.Join("docs", "zh-CN", "integrations.md"): {
+			"## Shared memory acceptance",
+			"export MEMFORGE_HOME=\"/absolute/path/to/memforge-home\"",
+			"memforge --no-version-check --root /absolute/path/to/project remember",
+			"memforge --no-version-check --root /absolute/path/to/project search",
+			"同一个绝对路径 `MEMFORGE_HOME`",
+			"同一个项目根目录",
+		},
+	}
+	for path, expectedSnippets := range cases {
+		doc := read(t, path)
+		for _, expected := range expectedSnippets {
+			if !strings.Contains(doc, expected) {
+				t.Fatalf("%s must document shared memory acceptance with %q", path, expected)
+			}
+		}
+	}
+}
+
 func TestPluginPackagingAutomationIsPresent(t *testing.T) {
 	scriptPath := filepath.Join(repoRoot(t), "tools", "package_plugins.sh")
 	info, err := os.Stat(scriptPath)
