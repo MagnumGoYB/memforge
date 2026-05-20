@@ -4,7 +4,7 @@
 
 Harness 由两部分组成：在编辑前引导代理的前馈指南，以及在编辑后捕获漂移的反馈传感器。
 
-对 `memforge` 来说，harness 刻意保持轻量：Go 测试、Makefile、PR 元数据校验、CI 闸门和精炼的代理指南。它在不引入任何后台服务的前提下，守住离线、不污染仓库的记忆契约。
+对 MemForge 来说，harness 刻意保持轻量：Go 测试、Makefile、PR 元数据校验、CI 闸门和精炼的代理指南。它在不引入任何后台服务的前提下，守住离线、不污染仓库的记忆契约。
 
 ## 前馈指南
 
@@ -41,7 +41,7 @@ Harness 由两部分组成：在编辑前引导代理的前馈指南，以及在
 - 交付前把每条验收标准映射到证据。
 - 写明跳过的校验与残余风险。
 
-## memforge 专属护栏
+## MemForge 专属护栏
 
 - 默认不加网络上传、同步、遥测、远程报告。命令启动期唯一允许的网络行为是 GitHub Release 版本检查，必须支持 `--no-version-check` 或 `MEMFORGE_NO_VERSION_CHECK=1` 关闭。
 - 不向用户仓库写入。记忆只存于 `MEMFORGE_HOME` 或 `$XDG_DATA_HOME/memforge`。

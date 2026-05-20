@@ -2,7 +2,7 @@
 
 [中文](zh-CN/plugin-distribution.md)
 
-This repository ships plugin packages for Claude Code and Codex. The release packages are designed for normal users to install from a marketplace or release bundle without first installing the `memforge` CLI on `PATH`.
+This repository ships MemForge plugin packages for Claude Code and Codex. The release packages are designed for normal users to install from a marketplace or release bundle without first installing the `memforge` CLI on `PATH`.
 
 ## Claude Code
 
@@ -81,11 +81,11 @@ go install ./cmd/memforge
 codex mcp add memforge -- memforge --no-version-check mcp
 ```
 
-Direct `codex mcp add` avoids carrying an extra local marketplace entry, but it is a development/debugging fallback rather than the packaged plugin runtime path. It uses the `memforge` binary on `PATH`; packaged Codex plugin bundles use the bundled launcher instead. The Codex MCP config sets `default_tools_approval_mode` to `approve` so non-interactive `codex exec` can complete memforge MCP tool calls.
+Direct `codex mcp add` avoids carrying an extra local marketplace entry, but it is a development/debugging fallback rather than the packaged plugin runtime path. It uses the `memforge` binary on `PATH`; packaged Codex plugin bundles use the bundled launcher instead. The Codex MCP config sets `default_tools_approval_mode` to `approve` so non-interactive `codex exec` can complete MemForge MCP tool calls.
 
 ## Release and CI packaging
 
-The GitHub release workflow builds multi-platform `memforge` binaries, runs repository and harness validation, packages the Claude Code and Codex plugin zips with `tools/package_plugins.sh`, smokes the bundled Claude runtime through the Node launcher, and uploads both standalone binaries and plugin zip assets to the release.
+The GitHub release workflow builds multi-platform `memforge` binaries, runs repository and harness validation, packages the MemForge Claude Code and Codex plugin zips with `tools/package_plugins.sh`, smokes the bundled Claude runtime through the Node launcher, and uploads both standalone binaries and plugin zip assets to the release.
 
 ## Real smoke target
 

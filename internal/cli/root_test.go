@@ -48,7 +48,7 @@ func TestExecuteVersionCheckWritesPromptToStderr(t *testing.T) {
 	if code != 0 {
 		t.Fatalf("code=%d stderr=%s", code, stderr.String())
 	}
-	if !bytes.Contains(stderr.Bytes(), []byte("new memforge version available")) {
+	if !bytes.Contains(stderr.Bytes(), []byte("new MemForge version available")) {
 		t.Fatalf("missing version prompt on stderr: %s", stderr.String())
 	}
 	if !json.Valid(stdout.Bytes()) {

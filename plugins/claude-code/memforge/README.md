@@ -1,6 +1,6 @@
-# memforge Claude Code plugin
+# MemForge Claude Code plugin
 
-This plugin connects Claude Code to `memforge` through its stdio MCP server.
+This plugin connects Claude Code to MemForge through its stdio MCP server.
 
 ## Marketplace or release install
 
@@ -36,6 +36,6 @@ go install ./cmd/memforge
 claude --plugin-dir ./plugins/claude-code/memforge
 ```
 
-Then in Claude Code, reload plugins and verify the `memforge` MCP tools are available.
+Then in Claude Code, reload plugins and verify the MemForge MCP tools are available.
 
 This local source-build flow is for development and debugging only. It is not the normal marketplace/release install path.

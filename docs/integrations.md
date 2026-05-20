@@ -2,7 +2,7 @@
 
 [中文](zh-CN/integrations.md)
 
-`memforge` is designed for agent invocation through the CLI or MCP server.
+MemForge is designed for agent invocation through the CLI or MCP server.
 
 ## Claude Code
 

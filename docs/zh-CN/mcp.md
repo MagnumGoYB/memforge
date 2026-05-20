@@ -2,7 +2,7 @@
 
 [English](../mcp.md)
 
-`memforge mcp` 启动一个用于本地项目记忆访问的 stdio MCP server。它复用 CLI 的同一套存储规则：记忆只保存在 `MEMFORGE_HOME` 或 `$XDG_DATA_HOME/memforge` 下，markdown 是 canonical store，server 不会自动扫描仓库，也不会调用远程 provider。
+`memforge mcp` 启动 MemForge 用于本地项目记忆访问的 stdio MCP server。它复用 CLI 的同一套存储规则：记忆只保存在 `MEMFORGE_HOME` 或 `$XDG_DATA_HOME/memforge` 下，markdown 是 canonical store，server 不会自动扫描仓库，也不会调用远程 provider。
 
 ## 运行
 

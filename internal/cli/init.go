@@ -72,7 +72,7 @@ func newInitCmd(streams Streams) *cobra.Command {
 			if settings.Format == baseconfig.FormatJSON {
 				return internalError(writeJSON(streams.Stdout, payload))
 			}
-			_, err = fmt.Fprintf(streams.Stdout, "Initialized memforge storage for %s at %s\n", proj.ID, paths.ProjectDir)
+			_, err = fmt.Fprintf(streams.Stdout, "Initialized MemForge storage for %s at %s\n", proj.ID, paths.ProjectDir)
 			return internalError(err)
 		},
 	}
