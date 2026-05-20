@@ -104,6 +104,7 @@
   - `docs/zh-CN/harness-engineering.md`
   - PR 规则有变时更新 `.github/pull_request_template.md`
 - Harness 测试只校验仓库结构、工作流约束、文档与脚本的对齐，不测试产品业务逻辑。
+- 文档中专有名词大小写由 `harness/casing_test.go` 配合 `docs/casing-rules.txt` 词表强制执行。向文档引入新专有名词时，须将其正确形式和错误变体加入词表。
 
 ## 6) 回归验证矩阵
 

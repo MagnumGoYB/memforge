@@ -104,6 +104,7 @@ Before every product or harness iteration, do a short internal review:
   - `docs/zh-CN/harness-engineering.md`
   - `.github/pull_request_template.md` when PR rules change
 - Harness tests should check repository structure, workflow constraints, and docs/script alignment. They should not test product business logic.
+- Proper noun casing in documentation is enforced by `harness/casing_test.go` using the word list in `docs/casing-rules.txt`. When adding a new proper noun to docs, add its canonical form and wrong variants to the rules file.
 
 ## 6) Regression Verification Matrix
 

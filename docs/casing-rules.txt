@@ -1,0 +1,19 @@
+# Documentation casing rules
+#
+# Format: canonical form | comma-separated wrong forms | comma-separated exempt forms
+#
+# Lines starting with # are comments. Blank lines are ignored.
+# Matching is performed on prose text (fenced code blocks are skipped).
+# Inline code spans are checked unless the token matches an exempt form.
+
+SQLite | Sqlite, sqlite, SQLITE | sqlite3, .sqlite, sqlite.
+FTS5 | fts5, Fts5
+GitHub | Github, github, GITHUB | github.com, github.event, .github, github., github-, /github, github-script
+OpenAI | openai, Openai, OPENAI
+Codex | codex | codex
+Claude Code | claude code
+Gemini CLI | gemini cli
+Cursor | cursor
+ULID | ulid, Ulid
+Viper | viper | viper
+MemForge | Memforge, memForge, MEMFORGE | memforge
