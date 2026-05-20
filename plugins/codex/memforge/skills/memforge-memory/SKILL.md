@@ -1,9 +1,9 @@
 ---
 name: memforge-memory
-description: Use when you need local project memory search, context compilation, or automatic project memory maintenance through memforge.
+description: Use when you need local project memory search, context compilation, or automatic project memory maintenance through MemForge.
 ---
 
-Use the `memforge` MCP server tools when available:
+Use the MemForge MCP server tools when available:
 
 - `search_memory` for targeted retrieval.
 - `compile_context` or `get_project_context` before coding.

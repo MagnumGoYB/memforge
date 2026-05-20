@@ -6,7 +6,7 @@
 
 ## 1) 项目使命
 
-`memforge` 是面向 AI 编码代理（Codex、Claude Code、Cursor、Gemini CLI）的本地优先项目记忆层。
+MemForge 是面向 AI 编码代理（Codex、Claude Code、Cursor、Gemini CLI）的本地优先项目记忆层。
 它把结构化的项目记忆保存在用户本机，用 SQLite + FTS5 建立索引，并在 Token 预算内编译成 agent-ready 上下文。
 虽然 CLI 也面向人类用户，但产品与工程决策必须优先保证 AI 代理与自动化流程的可靠调用。
 

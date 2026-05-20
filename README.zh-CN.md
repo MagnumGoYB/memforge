@@ -1,16 +1,16 @@
-# memforge
+# MemForge
 
 [English](README.md)
 
-![memforge 项目概览](README-overview-zh-CN.webp)
+![MemForge 项目概览](README-overview-zh-CN.webp)
 
-`memforge` 是面向 Claude Code、Codex、Cursor、Gemini CLI 等 AI coding agents 的本地优先项目记忆层。
+MemForge 是面向 Claude Code、Codex、Cursor、Gemini CLI 等 AI coding agents 的本地优先项目记忆层。
 
 它把结构化项目记忆保存在用户本机，用 SQLite + FTS5 建立索引，并在 token budget 内编译为可直接提供给 agent 的上下文。Markdown 始终是真值源；SQLite 索引可完全重建。
 
 ## 它是什么
 
-`memforge` 是一个面向 AI coding workflow 的本地项目上下文编译器。
+MemForge 是一个面向 AI coding workflow 的本地项目上下文编译器。
 
 它的目标是在不污染工作仓库的前提下，为 agent 和开发者提供可持续积累的项目记忆。
 

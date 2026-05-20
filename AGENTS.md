@@ -6,7 +6,7 @@ This file is the execution guide for AI coding agents working in this repository
 
 ## 1) Project Mission
 
-`memforge` is a local-first project memory layer for AI coding agents (Codex, Claude Code, Cursor, Gemini CLI).
+MemForge is a local-first project memory layer for AI coding agents (Codex, Claude Code, Cursor, Gemini CLI).
 It persists structured project memories on the user's machine, indexes them with SQLite + FTS5, and compiles them into agent-ready context within a token budget.
 Although the CLI is human-usable, product and engineering decisions must prioritize reliable invocation by AI agents and automation.
 

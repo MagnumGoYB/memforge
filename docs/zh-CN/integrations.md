@@ -2,7 +2,7 @@
 
 [English](../integrations.md)
 
-`memforge` 面向通过 CLI 或 MCP server 的 agent 调用。
+MemForge 面向通过 CLI 或 MCP server 的 agent 调用。
 
 ## Claude Code
 

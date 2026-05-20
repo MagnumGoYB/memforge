@@ -2,7 +2,7 @@
 
 [English](../memory-format.md)
 
-`memforge` 将项目记忆保存为按 kind 分组的 markdown block。Markdown 是 canonical store；SQLite 是可由 `memforge reindex` 重建的派生索引。
+MemForge 将项目记忆保存为按 kind 分组的 markdown block。Markdown 是 canonical store；SQLite 是可由 `memforge reindex` 重建的派生索引。
 
 ## Kind 文件映射
 

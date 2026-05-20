@@ -2,7 +2,7 @@
 
 [中文](zh-CN/mcp.md)
 
-`memforge mcp` runs a stdio MCP server for local project memory access. It uses the same storage rules as the CLI: memories stay under `MEMFORGE_HOME` or `$XDG_DATA_HOME/memforge`, markdown is canonical, and the server does not auto-scan the repository or call remote providers.
+`memforge mcp` runs MemForge's stdio MCP server for local project memory access. It uses the same storage rules as the CLI: memories stay under `MEMFORGE_HOME` or `$XDG_DATA_HOME/memforge`, markdown is canonical, and the server does not auto-scan the repository or call remote providers.
 
 ## Run
 

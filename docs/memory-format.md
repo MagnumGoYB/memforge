@@ -2,7 +2,7 @@
 
 [中文](zh-CN/memory-format.md)
 
-`memforge` stores project memories as markdown blocks grouped by kind. Markdown is the canonical store; SQLite is a derived index rebuilt by `memforge reindex`.
+MemForge stores project memories as markdown blocks grouped by kind. Markdown is the canonical store; SQLite is a derived index rebuilt by `memforge reindex`.
 
 ## Kind files
 

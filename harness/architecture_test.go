@@ -150,6 +150,20 @@ func TestModulePathMatchesGitHubRepository(t *testing.T) {
 	}
 }
 
+func TestMarketFacingProductNameUsesMemForgeCasing(t *testing.T) {
+	for _, path := range []string{
+		"README.md",
+		"README.zh-CN.md",
+		filepath.Join("plugins", "claude-code", "memforge", "README.md"),
+		filepath.Join("plugins", "codex", "memforge", "README.md"),
+	} {
+		content := read(t, path)
+		if !strings.Contains(content, "# MemForge") {
+			t.Fatalf("%s must use MemForge in the market-facing title", path)
+		}
+	}
+}
+
 func TestOfflineGuardrailsArePresent(t *testing.T) {
 	agents := read(t, "AGENTS.md")
 	agentsZH := read(t, "AGENTS.zh-CN.md")

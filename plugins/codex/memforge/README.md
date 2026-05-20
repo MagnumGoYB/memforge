@@ -1,6 +1,6 @@
-# memforge Codex plugin
+# MemForge Codex plugin
 
-This plugin connects Codex to `memforge` through its stdio MCP server.
+This plugin connects Codex to MemForge through its stdio MCP server.
 
 > **Official Codex plugin store:** OpenAI's self-serve plugin publishing is not yet available (marked "coming soon" as of May 2026). MemForge is not listed in the Codex official plugin browser. When public publishing opens and MemForge is accepted, users will be able to install directly via `/plugins` without manual setup.
 
@@ -35,4 +35,4 @@ go install ./cmd/memforge
 codex mcp add memforge -- memforge --no-version-check mcp
 ```
 
-Direct `codex mcp add` avoids carrying an extra local marketplace entry, but it uses a `memforge` binary on `PATH` and is not the packaged plugin runtime path. The Codex MCP config uses `default_tools_approval_mode: approve` so non-interactive `codex exec` can complete memforge MCP tool calls.
+Direct `codex mcp add` avoids carrying an extra local marketplace entry, but it uses a `memforge` binary on `PATH` and is not the packaged plugin runtime path. The Codex MCP config uses `default_tools_approval_mode: approve` so non-interactive `codex exec` can complete MemForge MCP tool calls.

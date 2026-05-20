@@ -10,15 +10,19 @@ import (
 
 func TestClaudeCodePluginPackageIsInstallable(t *testing.T) {
 	var plugin struct {
-		Name       string `json:"name"`
-		Version    string `json:"version"`
-		MCPServers string `json:"mcpServers"`
+		Name        string `json:"name"`
+		Description string `json:"description"`
+		Version     string `json:"version"`
+		MCPServers  string `json:"mcpServers"`
 	}
 	mustReadJSON(t, filepath.Join("plugins", "claude-code", "memforge", ".claude-plugin", "plugin.json"), &plugin)
 	if plugin.Name != "memforge" || plugin.Version == "" || plugin.MCPServers != "./.mcp.json" {
 		t.Fatalf("unexpected Claude plugin manifest: %#v", plugin)
 	}
 	assertClaudeMCPLauncher(t, filepath.Join("plugins", "claude-code", "memforge", ".mcp.json"))
+	if !strings.Contains(plugin.Description, "MemForge") {
+		t.Fatalf("Claude plugin description must use MemForge product casing: %q", plugin.Description)
+	}
 
 	var marketplace struct {
 		Name        string `json:"name"`
@@ -42,16 +46,20 @@ func TestClaudeCodePluginPackageIsInstallable(t *testing.T) {
 
 func TestCodexPluginPackageIsInstallable(t *testing.T) {
 	var plugin struct {
-		Name       string `json:"name"`
-		Version    string `json:"version"`
-		Skills     string `json:"skills"`
-		MCPServers string `json:"mcpServers"`
+		Name        string `json:"name"`
+		Description string `json:"description"`
+		Version     string `json:"version"`
+		Skills      string `json:"skills"`
+		MCPServers  string `json:"mcpServers"`
 	}
 	mustReadJSON(t, filepath.Join("plugins", "codex", "memforge", ".codex-plugin", "plugin.json"), &plugin)
 	if plugin.Name != "memforge" || plugin.Version == "" || plugin.Skills != "./skills/" || plugin.MCPServers != "./.mcp.json" {
 		t.Fatalf("unexpected Codex plugin manifest: %#v", plugin)
 	}
 	assertCodexMCPLauncher(t, filepath.Join("plugins", "codex", "memforge", ".mcp.json"))
+	if !strings.Contains(plugin.Description, "MemForge") {
+		t.Fatalf("Codex plugin description must use MemForge product casing: %q", plugin.Description)
+	}
 
 	var marketplace struct {
 		Name        string `json:"name"`

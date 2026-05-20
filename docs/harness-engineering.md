@@ -4,7 +4,7 @@
 
 A harness combines feedforward guides that steer an agent before it edits with feedback sensors that catch drift after it edits.
 
-For `memforge`, the harness is intentionally lightweight: Go tests, a Makefile, PR metadata validation, CI gates, and concise agent guides. It protects the offline, repository-non-polluting memory contract without adding background services.
+For MemForge, the harness is intentionally lightweight: Go tests, a Makefile, PR metadata validation, CI gates, and concise agent guides. It protects the offline, repository-non-polluting memory contract without adding background services.
 
 ## Feedforward Guides
 
@@ -41,7 +41,7 @@ For `memforge`, the harness is intentionally lightweight: Go tests, a Makefile, 
 - Map every acceptance criterion to evidence before handoff.
 - Report skipped validation and residual risk.
 
-## memforge-Specific Guardrails
+## MemForge-Specific Guardrails
 
 - Do not add network upload, sync, telemetry, or remote reporting by default. The only command-start network call permitted is the GitHub release version check, which must remain skippable via `--no-version-check` or `MEMFORGE_NO_VERSION_CHECK=1`.
 - Do not write into the user's repository. Memories live under `MEMFORGE_HOME` or `$XDG_DATA_HOME/memforge`.

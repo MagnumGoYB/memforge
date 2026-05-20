@@ -112,7 +112,7 @@ func maybeCheckVersion(cmd *cobra.Command, streams Streams) error {
 		return nil
 	}
 	if result.HasUpdate() {
-		_, _ = fmt.Fprintf(streams.Stderr, "new memforge version available: %s (current %s)\n", result.Latest, result.Current)
+		_, _ = fmt.Fprintf(streams.Stderr, "new MemForge version available: %s (current %s)\n", result.Latest, result.Current)
 	}
 	return nil
 }

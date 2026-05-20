@@ -2,7 +2,7 @@
 
 [中文](CONTRIBUTING.zh-CN.md)
 
-Thanks for contributing to `memforge`. This repository is a local-first Go CLI and memory layer for AI coding agents, so every contribution must preserve offline/privacy boundaries, stable automation behavior, and repository-non-pollution guarantees.
+Thanks for contributing to MemForge. This repository is a local-first Go CLI and memory layer for AI coding agents, so every contribution must preserve offline/privacy boundaries, stable automation behavior, and repository-non-pollution guarantees.
 
 ## Required Checks
 

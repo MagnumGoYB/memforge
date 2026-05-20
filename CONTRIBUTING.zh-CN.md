@@ -2,7 +2,7 @@
 
 [English](CONTRIBUTING.md)
 
-感谢参与 `memforge`。本仓库是面向 AI coding agents 的本地优先 Go CLI 与项目记忆层，因此所有贡献都必须保护离线/隐私边界、稳定的自动化行为，以及“不污染用户仓库”的约束。
+感谢参与 MemForge。本仓库是面向 AI coding agents 的本地优先 Go CLI 与项目记忆层，因此所有贡献都必须保护离线/隐私边界、稳定的自动化行为，以及“不污染用户仓库”的约束。
 
 ## 必跑检查
 
