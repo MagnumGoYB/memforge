@@ -126,10 +126,15 @@ func handleMCPSave(paths resolvedPaths, proj project.Project) mcp.Handler {
 		if err != nil {
 			return nil, err
 		}
-		if err := persistMemory(ctx, paths, record); err != nil {
+		_, warning, err := persistMemory(ctx, paths, record)
+		if err != nil {
 			return nil, err
 		}
-		return map[string]any{"id": record.ID, "kind": record.Kind, "title": record.Title}, nil
+		payload := map[string]any{"id": record.ID, "kind": record.Kind, "title": record.Title}
+		if warning != "" {
+			payload["warning"] = warning
+		}
+		return payload, nil
 	}
 }
 

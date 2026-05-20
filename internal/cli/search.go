@@ -48,13 +48,13 @@ func newSearchCmd(streams Streams) *cobra.Command {
 				ProjectID: proj.ID,
 				Query:     args[0],
 				Kinds:     splitCSV(kindsValue),
+				Tags:      tags,
 				Limit:     limit,
 				Hybrid:    hybrid,
 			})
 			if err != nil {
 				return userError("%v", err)
 			}
-			results = filterSearchResultsByTags(results, tags)
 			payload := map[string]any{
 				"query":   args[0],
 				"count":   len(results),
@@ -95,48 +95,6 @@ func splitCSV(raw string) []string {
 		if part != "" {
 			out = append(out, part)
 		}
-	}
-	return out
-}
-
-func filterSearchResultsByTags(results []index.SearchResult, required []string) []index.SearchResult {
-	required = normalizeRequiredTags(required)
-	if len(required) == 0 {
-		return results
-	}
-	filtered := make([]index.SearchResult, 0, len(results))
-	for _, result := range results {
-		tagSet := map[string]struct{}{}
-		for _, tag := range result.Tags {
-			tagSet[tag] = struct{}{}
-		}
-		match := true
-		for _, tag := range required {
-			if _, ok := tagSet[tag]; !ok {
-				match = false
-				break
-			}
-		}
-		if match {
-			filtered = append(filtered, result)
-		}
-	}
-	return filtered
-}
-
-func normalizeRequiredTags(tags []string) []string {
-	out := make([]string, 0, len(tags))
-	seen := map[string]struct{}{}
-	for _, tag := range tags {
-		tag = strings.TrimSpace(tag)
-		if tag == "" {
-			continue
-		}
-		if _, ok := seen[tag]; ok {
-			continue
-		}
-		seen[tag] = struct{}{}
-		out = append(out, tag)
 	}
 	return out
 }

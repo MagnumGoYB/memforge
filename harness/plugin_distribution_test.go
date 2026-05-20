@@ -68,7 +68,7 @@ func TestCodexPluginPackageIsInstallable(t *testing.T) {
 	if marketplace.Name == "" || marketplace.Description == "" {
 		t.Fatalf("unexpected Codex marketplace metadata: %#v", marketplace)
 	}
-	if len(marketplace.Plugins) != 1 || marketplace.Plugins[0].Name != "memforge" || marketplace.Plugins[0].Source.Source != "local" || marketplace.Plugins[0].Source.Path != "./plugins/codex/memforge" {
+	if len(marketplace.Plugins) != 1 || marketplace.Plugins[0].Name != "memforge" || marketplace.Plugins[0].Source.Source != "local" || marketplace.Plugins[0].Source.Path != "./dist/plugins/codex/memforge" {
 		t.Fatalf("unexpected Codex marketplace: %#v", marketplace)
 	}
 }

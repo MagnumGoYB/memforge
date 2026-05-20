@@ -66,7 +66,7 @@ func parseMarkdownBlock(block string, kind Kind, projectID string) (Record, erro
 	if endIdx < 0 {
 		return Record{}, fmt.Errorf("missing memory end marker")
 	}
-	body := strings.TrimSpace(bodyAndTail[:endIdx])
+	body := strings.TrimPrefix(strings.TrimSuffix(bodyAndTail[:endIdx], "\n"), "\n")
 	id, markerKind, err := parseMarker(marker)
 	if err != nil {
 		return Record{}, err

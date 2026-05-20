@@ -69,12 +69,15 @@ func TestDocumentationCasingConsistency(t *testing.T) {
 
 	var mdFiles []string
 	_ = filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
-		if err != nil || info.IsDir() {
+		if err != nil {
 			return nil
 		}
 		rel, _ := filepath.Rel(root, path)
-		if strings.HasPrefix(rel, ".cache") || strings.HasPrefix(rel, "vendor") {
-			return filepath.SkipDir
+		if info.IsDir() {
+			if shouldSkipCasingDir(rel) {
+				return filepath.SkipDir
+			}
+			return nil
 		}
 		if strings.HasSuffix(path, ".md") {
 			mdFiles = append(mdFiles, path)
@@ -120,6 +123,21 @@ func TestDocumentationCasingConsistency(t *testing.T) {
 			}
 		}
 	}
+}
+
+func shouldSkipCasingDir(rel string) bool {
+	rel = filepath.ToSlash(rel)
+	if rel == "." {
+		return false
+	}
+	parts := strings.Split(rel, "/")
+	for _, part := range parts {
+		switch part {
+		case ".cache", "vendor", "node_modules", ".git":
+			return true
+		}
+	}
+	return false
 }
 
 func containsWord(text, target string) bool {

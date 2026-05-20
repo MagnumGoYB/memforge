@@ -33,3 +33,29 @@ func TestServerListsAndCallsTools(t *testing.T) {
 		t.Fatalf("unexpected responses: %s", out.String())
 	}
 }
+
+func TestServerAcceptsLargeSingleLineRequests(t *testing.T) {
+	server := Server{
+		Tools: []Tool{{Name: "echo", Description: "Echo input", InputSchema: map[string]any{"type": "object"}}},
+		Handlers: map[string]Handler{
+			"echo": func(ctx context.Context, arguments json.RawMessage) (any, error) {
+				var args struct {
+					Text string `json:"text"`
+				}
+				if err := json.Unmarshal(arguments, &args); err != nil {
+					return nil, err
+				}
+				return map[string]any{"length": len(args.Text)}, nil
+			},
+		},
+	}
+	large := strings.Repeat("x", 70*1024)
+	input := `{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"echo","arguments":{"text":"` + large + `"}}}` + "\n"
+	var out bytes.Buffer
+	if err := server.Serve(context.Background(), strings.NewReader(input), &out); err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(out.String(), `\"length\":71680`) {
+		t.Fatalf("unexpected response: %s", out.String())
+	}
+}

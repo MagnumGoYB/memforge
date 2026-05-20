@@ -59,17 +59,19 @@ This source-checkout flow is for local development and debugging only. It is not
 Codex supports plugin manifests and marketplace/catalog installation flows. This repository includes a local/private distribution package:
 
 ```txt
-plugins/codex/memforge/.codex-plugin/plugin.json
-plugins/codex/memforge/.mcp.json
+dist/plugins/codex/memforge/.codex-plugin/plugin.json
+dist/plugins/codex/memforge/.mcp.json
 .agents/plugins/marketplace.json
 ```
 
 Packaged Codex plugin bundles include the same platform-specific `memforge` runtimes and use `bin/memforge-mcp-launcher.js` through the MCP configuration. Where a Codex host supports local/private marketplace or plugin package installation, users should not need to preinstall the `memforge` CLI on `PATH`.
 
-Codex CLI 0.130 exposes marketplace management but does not provide standalone plugin install/list/details subcommands. The extra `memforge-codex-marketplace` entry appears only if you add this repository as a local/private marketplace for development validation:
+Codex CLI 0.132 exposes marketplace management and plugin install/remove commands. The `memforge-codex-marketplace` entry points at the packaged bundle under `dist/plugins/codex/memforge`, so run `make package-plugins` before adding or refreshing the marketplace from a source checkout:
 
 ```bash
+make package-plugins
 codex plugin marketplace add "$PWD"
+codex plugin add memforge@memforge-codex-marketplace
 ```
 
 For day-to-day CLI smoke, the simpler fallback is direct MCP registration:

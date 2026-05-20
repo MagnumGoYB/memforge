@@ -1,6 +1,7 @@
 package memory
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 )
@@ -22,7 +23,7 @@ func LoadRecords(memoriesDir string, projectID string) ([]Record, error) {
 		}
 		parsed, err := ParseMarkdownBlocks(string(data), kind, projectID)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("parse %s (%s): %w", fileName, kind, err)
 		}
 		records = append(records, parsed...)
 	}

@@ -27,15 +27,26 @@ func UpsertMemory(ctx context.Context, db *sql.DB, record MemoryRecord) error {
 		return err
 	}
 	defer tx.Rollback()
+	if err := upsertMemory(ctx, tx, record); err != nil {
+		return err
+	}
+	return tx.Commit()
+}
+
+type memoryExecutor interface {
+	ExecContext(context.Context, string, ...any) (sql.Result, error)
+}
+
+func upsertMemory(ctx context.Context, exec memoryExecutor, record MemoryRecord) error {
 	tagsJSON, err := json.Marshal(record.Tags)
 	if err != nil {
 		return err
 	}
 	tagsFlat := strings.Join(record.Tags, " ")
-	_, err = tx.ExecContext(ctx, `INSERT INTO memories (
-		id, project_id, kind, title, content, tags_json, tags_flat, source, confidence, usage_count, created_at, updated_at
-	) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?)
-	ON CONFLICT(id) DO UPDATE SET
+	_, err = exec.ExecContext(ctx, `INSERT INTO memories (
+			id, project_id, kind, title, content, tags_json, tags_flat, source, confidence, usage_count, created_at, updated_at
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?)
+		ON CONFLICT(id) DO UPDATE SET
 		project_id = excluded.project_id,
 		kind = excluded.kind,
 		title = excluded.title,
@@ -60,5 +71,5 @@ func UpsertMemory(ctx context.Context, db *sql.DB, record MemoryRecord) error {
 	if err != nil {
 		return err
 	}
-	return tx.Commit()
+	return nil
 }

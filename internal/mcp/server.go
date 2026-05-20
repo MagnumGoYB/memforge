@@ -41,16 +41,22 @@ type responseError struct {
 }
 
 func (s Server) Serve(ctx context.Context, in io.Reader, out io.Writer) error {
-	scanner := bufio.NewScanner(in)
 	writer := bufio.NewWriter(out)
 	defer writer.Flush()
-	for scanner.Scan() {
+	reader := bufio.NewReader(in)
+	for {
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
 		default:
 		}
-		line := scanner.Bytes()
+		line, err := reader.ReadBytes('\n')
+		if err != nil && len(line) == 0 {
+			if err == io.EOF {
+				return nil
+			}
+			return err
+		}
 		if len(line) == 0 {
 			continue
 		}
@@ -68,8 +74,10 @@ func (s Server) Serve(ctx context.Context, in io.Reader, out io.Writer) error {
 		if err := writeResponse(writer, resp); err != nil {
 			return err
 		}
+		if err == io.EOF {
+			return nil
+		}
 	}
-	return scanner.Err()
 }
 
 func (s Server) handle(ctx context.Context, req request) response {

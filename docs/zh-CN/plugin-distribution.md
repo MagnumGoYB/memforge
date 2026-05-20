@@ -59,17 +59,19 @@ claude --plugin-dir ./plugins/claude-code/memforge
 Codex 支持 plugin manifest 与 marketplace/catalog 安装流程。本仓库提供本地/私有分发包：
 
 ```txt
-plugins/codex/memforge/.codex-plugin/plugin.json
-plugins/codex/memforge/.mcp.json
+dist/plugins/codex/memforge/.codex-plugin/plugin.json
+dist/plugins/codex/memforge/.mcp.json
 .agents/plugins/marketplace.json
 ```
 
 打包后的 Codex plugin bundle 同样包含各平台的 `memforge` runtime，并通过 MCP 配置使用 `bin/memforge-mcp-launcher.js`。当 Codex host 支持本地/私有 marketplace 或 plugin package 安装时，用户不应需要预先把 `memforge` CLI 安装到 `PATH`。
 
-Codex CLI 0.130 暴露 marketplace 管理，但没有独立的 plugin install/list/details 子命令。只有在把本仓库作为本地/私有 marketplace 加入以验证 discovery 时，才会出现额外的 `memforge-codex-marketplace` entry：
+Codex CLI 0.132 暴露 marketplace 管理和 plugin install/remove 命令。`memforge-codex-marketplace` entry 指向 `dist/plugins/codex/memforge` 下的打包 bundle，所以从源码 checkout 添加或刷新 marketplace 前需要先运行 `make package-plugins`：
 
 ```bash
+make package-plugins
 codex plugin marketplace add "$PWD"
+codex plugin add memforge@memforge-codex-marketplace
 ```
 
 日常 CLI smoke 更简单的 fallback 是直接注册 MCP server：

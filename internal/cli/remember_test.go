@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/MagnumGOYB/memforge/internal/index"
+	"github.com/MagnumGOYB/memforge/internal/memory"
 	"github.com/MagnumGOYB/memforge/internal/project"
 )
 
@@ -95,4 +96,35 @@ func TestExecuteRememberFromStdin(t *testing.T) {
 	if code != 0 {
 		t.Fatalf("code=%d stderr=%s", code, stderr.String())
 	}
+}
+
+func TestPersistMemoryReturnsWarningWhenIndexUpdateFails(t *testing.T) {
+	record := testRecord(t)
+	blockingFile := filepath.Join(t.TempDir(), "not-a-dir")
+	if err := os.WriteFile(blockingFile, []byte("x"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	paths := resolvedPaths{
+		ProjectDir:  t.TempDir(),
+		MemoriesDir: filepath.Join(t.TempDir(), "memories"),
+		Index:       filepath.Join(blockingFile, "index.sqlite"),
+	}
+	if _, warning, err := persistMemory(t.Context(), paths, record); err != nil || warning == "" {
+		t.Fatalf("expected warning-only index failure, warning=%q err=%v", warning, err)
+	}
+}
+
+func testRecord(t *testing.T) memory.Record {
+	t.Helper()
+	record, err := memory.NewRecord(memory.NewRecordInput{
+		ProjectID:  "project-1",
+		Kind:       memory.KindDecision,
+		Title:      "Index failure",
+		Content:    "Body",
+		Confidence: 1,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	return record
 }

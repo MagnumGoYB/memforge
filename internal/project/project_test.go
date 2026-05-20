@@ -16,9 +16,17 @@ func TestCanonicalizeIdentifierStripsCredentialsAndDotGit(t *testing.T) {
 
 func TestCanonicalizeIdentifierSupportsSCPLikeURL(t *testing.T) {
 	got := CanonicalizeIdentifier("git@github.com:MagnumGOYB/memforge.git")
-	want := "github.com:MagnumGOYB/memforge"
+	want := "https://github.com/magnumgoyb/memforge"
 	if got != want {
 		t.Fatalf("got %q want %q", got, want)
+	}
+}
+
+func TestCanonicalizeIdentifierNormalizesGitHubPathCase(t *testing.T) {
+	left := CanonicalizeIdentifier("https://github.com/MagnumGOYB/memforge.git")
+	right := CanonicalizeIdentifier("git@github.com:magnumgoyb/MemForge.git")
+	if left != right {
+		t.Fatalf("github identifiers should match: %q != %q", left, right)
 	}
 }
 

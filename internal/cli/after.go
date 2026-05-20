@@ -101,8 +101,12 @@ func newAfterCmd(streams Streams) *cobra.Command {
 				if err != nil {
 					return invalidError("candidate %s: %v", candidate.ID, err)
 				}
-				if err := persistMemory(context.Background(), paths, record); err != nil {
+				_, warning, err := persistMemory(context.Background(), paths, record)
+				if err != nil {
 					return internalError(err)
+				}
+				if warning != "" {
+					warnings = append(warnings, warning)
 				}
 				persisted = append(persisted, persistedMemory{ID: record.ID, Kind: record.Kind, Title: record.Title})
 			}

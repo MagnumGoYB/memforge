@@ -3,6 +3,7 @@ package cli
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"path/filepath"
 	"testing"
 )
@@ -93,6 +94,39 @@ func TestExecuteSearchFiltersTags(t *testing.T) {
 		t.Fatal(err)
 	}
 	if payload.Count != 1 || payload.Results[0].Kind != "constraint" {
+		t.Fatalf("unexpected payload: %#v", payload)
+	}
+}
+
+func TestExecuteSearchTagFilterReturnsMatchesBeyondInitialLimit(t *testing.T) {
+	storage := filepath.Join(t.TempDir(), "storage")
+	t.Setenv("MEMFORGE_HOME", storage)
+	projectRoot := t.TempDir()
+	for i := 0; i < 25; i++ {
+		args := []string{"remember", "repository framework", "--root", projectRoot, "--kind", "decision", "--title", fmt.Sprintf("General %02d", i), "--tag", "general", "--format", "json"}
+		if code := Execute(args, Streams{Stdin: bytes.NewBuffer(nil), Stdout: &bytes.Buffer{}, Stderr: &bytes.Buffer{}}); code != 0 {
+			t.Fatalf("remember code=%d args=%v", code, args)
+		}
+	}
+	if code := Execute([]string{"remember", "repository framework", "--root", projectRoot, "--kind", "constraint", "--title", "Policy match", "--tag", "policy", "--format", "json"}, Streams{Stdin: bytes.NewBuffer(nil), Stdout: &bytes.Buffer{}, Stderr: &bytes.Buffer{}}); code != 0 {
+		t.Fatalf("remember policy code=%d", code)
+	}
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	code := Execute([]string{"search", "repository framework", "--root", projectRoot, "--tag", "policy", "--limit", "1", "--format", "json"}, Streams{Stdin: bytes.NewBuffer(nil), Stdout: &stdout, Stderr: &stderr})
+	if code != 0 {
+		t.Fatalf("code=%d stderr=%s", code, stderr.String())
+	}
+	var payload struct {
+		Count   int `json:"count"`
+		Results []struct {
+			Title string `json:"title"`
+		} `json:"results"`
+	}
+	if err := json.Unmarshal(stdout.Bytes(), &payload); err != nil {
+		t.Fatal(err)
+	}
+	if payload.Count != 1 || len(payload.Results) != 1 || payload.Results[0].Title != "Policy match" {
 		t.Fatalf("unexpected payload: %#v", payload)
 	}
 }

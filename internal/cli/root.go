@@ -1,13 +1,16 @@
 package cli
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
+	"os"
 	"strings"
 
 	"github.com/MagnumGOYB/memforge/internal/buildinfo"
 	baseconfig "github.com/MagnumGOYB/memforge/internal/config"
+	"github.com/MagnumGOYB/memforge/internal/versioncheck"
 	"github.com/spf13/cobra"
 )
 
@@ -69,7 +72,49 @@ func newRootCmd(streams Streams) *cobra.Command {
 	cmd.AddCommand(newMCPCmd(streams))
 	cmd.AddCommand(newDiffSummaryCmd(streams))
 	cmd.AddCommand(newDebugCmd(streams))
+	wrapVersionCheck(cmd, streams)
 	return cmd
+}
+
+func wrapVersionCheck(root *cobra.Command, streams Streams) {
+	for _, cmd := range root.Commands() {
+		wrapVersionCheck(cmd, streams)
+	}
+	if root.RunE == nil {
+		return
+	}
+	runE := root.RunE
+	root.RunE = func(cmd *cobra.Command, args []string) error {
+		if err := maybeCheckVersion(cmd, streams); err != nil {
+			return err
+		}
+		return runE(cmd, args)
+	}
+}
+
+func maybeCheckVersion(cmd *cobra.Command, streams Streams) error {
+	settings, err := baseconfig.LoadBase(cmd)
+	if err != nil {
+		return invalidError("%v", err)
+	}
+	if settings.NoVersionCheck || strings.EqualFold(strings.TrimSpace(cmd.Name()), "mcp") {
+		return nil
+	}
+	if strings.HasSuffix(os.Args[0], ".test") && os.Getenv("MEMFORGE_VERSION_CHECK_LATEST") == "" && os.Getenv("MEMFORGE_VERSION_CHECK_URL") == "" {
+		return nil
+	}
+	storageRoot, err := baseconfig.ResolveStorageRoot()
+	if err != nil {
+		return nil
+	}
+	result, err := versioncheck.Check(context.Background(), storageRoot, buildinfo.Version())
+	if err != nil {
+		return nil
+	}
+	if result.HasUpdate() {
+		_, _ = fmt.Fprintf(streams.Stderr, "new memforge version available: %s (current %s)\n", result.Latest, result.Current)
+	}
+	return nil
 }
 
 func newVersionCmd(streams Streams) *cobra.Command {

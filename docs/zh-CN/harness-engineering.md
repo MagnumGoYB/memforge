@@ -21,7 +21,7 @@ Harness 由两部分组成：在编辑前引导代理的前馈指南，以及在
 
 - `make test`：覆盖项目检测、记忆模型、Markdown I/O、SQLite/FTS、编译器和 CLI 命令的单测与集成测试。
 - `make test-packages PKGS="./internal/index ./internal/compiler"`：指定包测试，复用与全量测试相同的仓库本地 Go cache。
-- `make test-harness`：仓库结构传感器，校验代理文档、Makefile 命令、CI 闸门、PR 模板、离线/隐私约束，以及文档专有名词大小写（`docs/casing-rules.txt`）。
+- `make test-harness`：仓库结构传感器，校验代理文档、Makefile 命令、CI 闸门、PR 模板、离线/隐私约束，以及仓库受控文档的专有名词大小写（`docs/casing-rules.txt`）。大小写传感器会跳过生成缓存、vendored dependencies、`node_modules` 与 Git metadata，即使它们位于嵌套 worktree 目录下。
 - `make vet`：静态分析。
 - `make build`：单二进制构建检查。
 - `make validate-pr-body`：可执行的 PR 元数据闸门。

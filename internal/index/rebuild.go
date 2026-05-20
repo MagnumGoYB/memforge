@@ -55,15 +55,20 @@ func RebuildMemories(ctx context.Context, db *sql.DB, records []MemoryRecord) (R
 			stats.Ghosts++
 		}
 	}
+	tx, err := db.BeginTx(ctx, nil)
+	if err != nil {
+		return stats, err
+	}
+	defer tx.Rollback()
 	stats.Deleted = len(existingIDs)
-	if err := ResetMemories(ctx, db); err != nil {
+	if _, err := tx.ExecContext(ctx, `DELETE FROM memories`); err != nil {
 		return stats, err
 	}
 	for _, record := range records {
-		if err := UpsertMemory(ctx, db, record); err != nil {
+		if err := upsertMemory(ctx, tx, record); err != nil {
 			return stats, err
 		}
 		stats.Indexed++
 	}
-	return stats, nil
+	return stats, tx.Commit()
 }

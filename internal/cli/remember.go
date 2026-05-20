@@ -65,10 +65,17 @@ func newRememberCmd(streams Streams) *cobra.Command {
 			if err != nil {
 				return invalidError("%v", err)
 			}
-			if err := persistMemory(context.Background(), paths, record); err != nil {
+			_, warning, err := persistMemory(context.Background(), paths, record)
+			if err != nil {
 				return internalError(err)
 			}
+			if warning != "" {
+				_, _ = fmt.Fprintln(streams.Stderr, warning)
+			}
 			payload := map[string]any{"id": record.ID, "kind": record.Kind, "title": record.Title}
+			if warning != "" {
+				payload["warning"] = warning
+			}
 			if settings.Format == baseconfig.FormatJSON {
 				return internalError(writeJSON(streams.Stdout, payload))
 			}

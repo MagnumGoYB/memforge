@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 	"time"
+	"unicode/utf8"
 )
 
 func TestSearchMemoriesFindsRankedMatches(t *testing.T) {
@@ -127,5 +128,28 @@ func TestSearchMemoriesConfidenceDecayKeepsOldDecisionBelowConstraint(t *testing
 	}
 	if len(results) != 2 || results[0].ID != "mem_constraint" {
 		t.Fatalf("unexpected order: %#v", results)
+	}
+}
+
+func TestSearchMemoriesSnippetKeepsUTF8Valid(t *testing.T) {
+	db, err := Open(filepath.Join(t.TempDir(), "index.sqlite"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer db.Close()
+	now := time.Date(2026, 5, 19, 10, 0, 0, 0, time.UTC)
+	content := "前缀内容用于制造较长文本，让片段截取边界更容易落在多字节字符附近。搜索关键词后面继续追加中文内容，确保结尾也可能被截断。"
+	if err := UpsertMemory(context.Background(), db, MemoryRecord{ID: "mem_utf8", ProjectID: "project-1", Kind: "decision", Title: "中文片段", Content: content, Tags: []string{"repository"}, Confidence: 1, CreatedAt: now, UpdatedAt: now}); err != nil {
+		t.Fatal(err)
+	}
+	results, err := SearchMemories(context.Background(), db, SearchQuery{ProjectID: "project-1", Query: "repository", Limit: 10})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(results) != 1 {
+		t.Fatalf("got %d results", len(results))
+	}
+	if !utf8.ValidString(results[0].Snippet) {
+		t.Fatalf("snippet is not valid UTF-8: %q", results[0].Snippet)
 	}
 }

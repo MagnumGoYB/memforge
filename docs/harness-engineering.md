@@ -21,7 +21,7 @@ For `memforge`, the harness is intentionally lightweight: Go tests, a Makefile, 
 
 - `make test`: unit and integration coverage for project detection, memory model, markdown I/O, SQLite/FTS, compiler, and CLI command surfaces.
 - `make test-packages PKGS="./internal/index ./internal/compiler"`: targeted package tests with the same repository-local Go caches as the full test target.
-- `make test-harness`: repository-structure sensors for agent docs, Makefile commands, CI gates, PR template, offline/privacy constraints, and proper noun casing in documentation (`docs/casing-rules.txt`).
+- `make test-harness`: repository-structure sensors for agent docs, Makefile commands, CI gates, PR template, offline/privacy constraints, and proper noun casing in repository-controlled documentation (`docs/casing-rules.txt`). The casing sensor skips generated caches, vendored dependencies, `node_modules`, and Git metadata even when they appear under nested worktree directories.
 - `make vet`: static analysis.
 - `make build`: single-binary build check.
 - `make validate-pr-body`: executable PR body metadata gate.

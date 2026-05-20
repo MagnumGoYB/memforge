@@ -68,7 +68,7 @@ Until then, use one of the paths below.
 
 **A. Local/private marketplace or Codex host plugin package**
 
-When your Codex host supports local/private marketplace or plugin package installation, install the packaged `plugins/codex/memforge` bundle through that host. The packaged bundle includes platform-specific `memforge` runtime binaries and uses `bin/memforge-mcp-launcher.js`; users should not need to preinstall the CLI.
+When your Codex host supports local/private marketplace or plugin package installation, install the packaged `dist/plugins/codex/memforge` bundle through that host. The packaged bundle includes platform-specific `memforge` runtime binaries and uses `bin/memforge-mcp-launcher.js`; users should not need to preinstall the CLI.
 
 **B. Direct MCP registration (recommended CLI fallback)**
 
@@ -81,13 +81,14 @@ This uses a `memforge` binary on `PATH` and is not the packaged plugin runtime p
 
 **C. Local marketplace discovery (development/debugging only)**
 
-Codex CLI 0.130 exposes marketplace management but no standalone `plugin install/list/details` subcommands. From a source checkout:
+Codex CLI 0.132 exposes marketplace management and plugin install/remove commands. From a packaged checkout after `make package-plugins`:
 
 ```bash
 codex plugin marketplace add "$PWD"
+codex plugin add memforge@memforge-codex-marketplace
 ```
 
-This validates marketplace discovery only; it does not complete a full plugin install.
+This installs the packaged bundle from `dist/plugins/codex/memforge`; it should start without a separate `memforge` binary on `PATH`.
 
 See `docs/plugin-distribution.md` for detailed Claude Code and Codex distribution information.
 

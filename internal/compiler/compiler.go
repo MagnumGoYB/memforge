@@ -111,13 +111,10 @@ func allocateBudget(entries []Entry, budget int) []Entry {
 		remaining int
 	}
 	weights := make([]quota, 0, len(kindBuckets))
-	totalWeight := 0
 	for kind := range kindBuckets {
 		weight := defaultKindWeight(kind)
 		weights = append(weights, quota{kind: kind, tokens: int(math.Floor(float64(budget*weight) / 505.0)), remaining: weight})
-		totalWeight += weight
 	}
-	_ = totalWeight
 	sort.SliceStable(weights, func(i, j int) bool {
 		return defaultKindWeight(weights[i].kind) > defaultKindWeight(weights[j].kind)
 	})

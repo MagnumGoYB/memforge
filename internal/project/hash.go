@@ -43,6 +43,7 @@ func canonicalizeURL(raw string) (string, bool) {
 	if u.Path == "." {
 		u.Path = ""
 	}
+	u.Path = normalizeRepoPath(u.Host, u.Path)
 	return u.String(), true
 }
 
@@ -55,8 +56,16 @@ func canonicalizeSCPLikeURL(raw string) (string, bool) {
 	repoPath := strings.TrimPrefix(match[2], "/")
 	repoPath = strings.TrimSuffix(repoPath, ".git")
 	repoPath = path.Clean(repoPath)
+	repoPath = strings.TrimPrefix(normalizeRepoPath(host, "/"+repoPath), "/")
 	if repoPath == "." || repoPath == "" {
 		return host, true
 	}
-	return host + ":" + repoPath, true
+	return "https://" + host + "/" + repoPath, true
+}
+
+func normalizeRepoPath(host string, repoPath string) string {
+	if host == "github.com" {
+		return strings.ToLower(repoPath)
+	}
+	return repoPath
 }

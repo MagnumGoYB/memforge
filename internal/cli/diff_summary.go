@@ -83,7 +83,7 @@ func runGitNumstat(root string) ([]byte, error) {
 func summarizeNumstat(data string) diffSummaryPayload {
 	payload := diffSummaryPayload{Summaries: []fileDiffSummary{}}
 	for _, line := range strings.Split(strings.ReplaceAll(data, "\r\n", "\n"), "\n") {
-		fields := strings.Fields(line)
+		fields := strings.SplitN(line, "\t", 3)
 		if len(fields) < 3 {
 			continue
 		}

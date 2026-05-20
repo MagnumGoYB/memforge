@@ -39,6 +39,13 @@ func detectRoot(rootOverride string) (root string, gitRoot string, err error) {
 			return "", "", fmt.Errorf("resolve --root: %w", err)
 		}
 		root = filepath.Clean(root)
+		info, err := os.Stat(root)
+		if err != nil {
+			return "", "", fmt.Errorf("resolve --root: %w", err)
+		}
+		if !info.IsDir() {
+			return "", "", fmt.Errorf("resolve --root: %s is not a directory", root)
+		}
 		return root, gitTopLevel(root), nil
 	}
 	cwd, err := os.Getwd()

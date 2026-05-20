@@ -15,6 +15,16 @@ func TestSummarizeNumstat(t *testing.T) {
 	}
 }
 
+func TestSummarizeNumstatPreservesPathsWithSpacesAndRenames(t *testing.T) {
+	payload := summarizeNumstat("1\t2\tdocs/path with spaces.md\n3\t4\told name.md => new name.md\n")
+	if payload.Files != 2 || payload.Added != 4 || payload.Deleted != 6 {
+		t.Fatalf("unexpected totals: %#v", payload)
+	}
+	if payload.Summaries[0].Path != "docs/path with spaces.md" || payload.Summaries[1].Path != "old name.md => new name.md" {
+		t.Fatalf("unexpected paths: %#v", payload.Summaries)
+	}
+}
+
 func TestExecuteDiffSummaryFromFileJSON(t *testing.T) {
 	input := filepath.Join(t.TempDir(), "numstat.txt")
 	if err := os.WriteFile(input, []byte("2\t1\tinternal/cli/root.go\n"), 0o644); err != nil {

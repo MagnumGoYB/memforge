@@ -19,6 +19,7 @@ type SearchQuery struct {
 	ProjectID string
 	Query     string
 	Kinds     []string
+	Tags      []string
 	Limit     int
 	Hybrid    bool
 }
@@ -51,11 +52,12 @@ func SearchMemories(ctx context.Context, db *sql.DB, query SearchQuery) ([]Searc
 	if limit <= 0 {
 		limit = 20
 	}
+	requiredTags := normalizeTags(query.Tags)
 	args := []any{query.ProjectID, matchExpr}
 	sqlText := `SELECT m.id, m.project_id, m.kind, m.title, m.content, m.tags_json, m.source, m.confidence, m.usage_count, m.created_at, m.updated_at, bm25(memories_fts)
-FROM memories_fts
-JOIN memories m ON m.rowid = memories_fts.rowid
-WHERE m.project_id = ? AND memories_fts MATCH ?`
+	FROM memories_fts
+	JOIN memories m ON m.rowid = memories_fts.rowid
+	WHERE m.project_id = ? AND memories_fts MATCH ?`
 	if len(query.Kinds) > 0 {
 		kindPlaceholders := make([]string, 0, len(query.Kinds))
 		for _, kind := range query.Kinds {
@@ -64,8 +66,21 @@ WHERE m.project_id = ? AND memories_fts MATCH ?`
 		}
 		sqlText += ` AND m.kind IN (` + strings.Join(kindPlaceholders, ",") + `)`
 	}
-	sqlText += ` ORDER BY bm25(memories_fts) LIMIT ?`
-	args = append(args, limit)
+	if len(requiredTags) > 0 {
+		sqlText += ` AND ` + tagFilterSQL(len(requiredTags))
+		for _, tag := range requiredTags {
+			encodedTag, err := json.Marshal(tag)
+			if err != nil {
+				return nil, err
+			}
+			args = append(args, string(encodedTag))
+		}
+	}
+	sqlText += ` ORDER BY bm25(memories_fts)`
+	if len(requiredTags) == 0 {
+		sqlText += ` LIMIT ?`
+		args = append(args, limit)
+	}
 	rows, err := db.QueryContext(ctx, sqlText, args...)
 	if err != nil {
 		return nil, err
@@ -93,6 +108,9 @@ WHERE m.project_id = ? AND memories_fts MATCH ?`
 		}
 		result.Snippet = buildSnippet(result.Content, query.Query)
 		results = append(results, result)
+		if len(requiredTags) > 0 && len(results) == limit {
+			break
+		}
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -114,6 +132,32 @@ func buildMatchQuery(raw string) string {
 		parts = append(parts, fmt.Sprintf(`"%s"*`, token))
 	}
 	return strings.Join(parts, " ")
+}
+
+func normalizeTags(tags []string) []string {
+	out := make([]string, 0, len(tags))
+	seen := map[string]struct{}{}
+	for _, tag := range tags {
+		tag = strings.TrimSpace(tag)
+		if tag == "" {
+			continue
+		}
+		if _, ok := seen[tag]; ok {
+			continue
+		}
+		seen[tag] = struct{}{}
+		out = append(out, tag)
+	}
+	sort.Strings(out)
+	return out
+}
+
+func tagFilterSQL(count int) string {
+	clauses := make([]string, 0, count)
+	for range count {
+		clauses = append(clauses, `instr(m.tags_json, ?) > 0`)
+	}
+	return strings.Join(clauses, ` AND `)
 }
 
 func scoreResults(results []SearchResult) {
@@ -196,26 +240,47 @@ func buildSnippet(content string, query string) string {
 	for _, token := range tokenPattern.FindAllString(strings.ToLower(query), -1) {
 		idx := strings.Index(lowerContent, token)
 		if idx >= 0 {
-			start := idx - 48
-			if start < 0 {
-				start = 0
-			}
-			end := idx + len(token) + 96
-			if end > len(content) {
-				end = len(content)
-			}
-			snippet := strings.TrimSpace(content[start:end])
-			if start > 0 {
-				snippet = "..." + snippet
-			}
-			if end < len(content) {
-				snippet += "..."
-			}
-			return snippet
+			return runeSnippet(content, idx, len(token), 48, 96)
 		}
 	}
-	if len(content) <= 140 {
+	runes := []rune(content)
+	if len(runes) <= 140 {
 		return content
 	}
-	return content[:140] + "..."
+	return string(runes[:140]) + "..."
+}
+
+func runeSnippet(content string, byteStart int, byteLen int, before int, after int) string {
+	runes := []rune(content)
+	startRune := 0
+	endRune := len(runes)
+	currentByte := 0
+	matchStartRune := 0
+	matchEndRune := len(runes)
+	for i, r := range runes {
+		if currentByte == byteStart {
+			matchStartRune = i
+		}
+		currentByte += len(string(r))
+		if currentByte == byteStart+byteLen {
+			matchEndRune = i + 1
+			break
+		}
+	}
+	startRune = matchStartRune - before
+	if startRune < 0 {
+		startRune = 0
+	}
+	endRune = matchEndRune + after
+	if endRune > len(runes) {
+		endRune = len(runes)
+	}
+	snippet := strings.TrimSpace(string(runes[startRune:endRune]))
+	if startRune > 0 {
+		snippet = "..." + snippet
+	}
+	if endRune < len(runes) {
+		snippet += "..."
+	}
+	return snippet
 }

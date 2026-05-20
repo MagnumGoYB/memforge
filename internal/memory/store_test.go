@@ -38,6 +38,24 @@ func TestAppendMarkdownWritesToKindFile(t *testing.T) {
 	}
 }
 
+func TestLoadRecordsReportsFileContextForMalformedBlock(t *testing.T) {
+	memoriesDir := filepath.Join(t.TempDir(), "memories")
+	if err := EnsureLayout(memoriesDir); err != nil {
+		t.Fatal(err)
+	}
+	path := filepath.Join(memoriesDir, "decisions.md")
+	if err := os.WriteFile(path, []byte("<!-- memforge:memory id=x kind=decision -->\nnot-frontmatter\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	_, err := LoadRecords(memoriesDir, "project-1")
+	if err == nil {
+		t.Fatal("expected parse error")
+	}
+	if !strings.Contains(err.Error(), "decisions.md") || !strings.Contains(err.Error(), "decision") {
+		t.Fatalf("missing file context: %v", err)
+	}
+}
+
 func TestAppendMarkdownPreservesExistingContent(t *testing.T) {
 	memoriesDir := filepath.Join(t.TempDir(), "memories")
 	if err := EnsureLayout(memoriesDir); err != nil {

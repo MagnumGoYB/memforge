@@ -43,3 +43,18 @@ func TestParseMarkdownBlocksRejectsInvalidBlock(t *testing.T) {
 		t.Fatal("expected error")
 	}
 }
+
+func TestParseMarkdownBlocksPreservesIndentedBodyEdges(t *testing.T) {
+	data := "<!-- memforge:memory id=mem_1 kind=decision -->\n---\ntitle: \"Indented markdown\"\ntags: []\nconfidence: 1\ncreated_at: 2026-05-19T10:00:00Z\nupdated_at: 2026-05-19T10:00:00Z\n---\n    code block\n\nbody\n    tail\n<!-- /memforge:memory -->\n"
+	records, err := ParseMarkdownBlocks(data, KindDecision, "project-1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(records) != 1 {
+		t.Fatalf("got %d records", len(records))
+	}
+	want := "    code block\n\nbody\n    tail"
+	if records[0].Content != want {
+		t.Fatalf("content changed:\nwant %q\n got %q", want, records[0].Content)
+	}
+}

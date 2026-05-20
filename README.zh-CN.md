@@ -68,7 +68,7 @@
 
 **A. 本地/私有 marketplace 或 Codex host 插件包**
 
-当 Codex host 支持本地/私有 marketplace 或 plugin package 安装时，通过该 host 安装打包后的 `plugins/codex/memforge` bundle。打包 bundle 包含各平台的 `memforge` runtime，并通过 `bin/memforge-mcp-launcher.js` 启动；用户不应需要预先安装 CLI。
+当 Codex host 支持本地/私有 marketplace 或 plugin package 安装时，通过该 host 安装打包后的 `dist/plugins/codex/memforge` bundle。打包 bundle 包含各平台的 `memforge` runtime，并通过 `bin/memforge-mcp-launcher.js` 启动；用户不应需要预先安装 CLI。
 
 **B. 直接 MCP 注册（推荐 CLI fallback）**
 
@@ -81,13 +81,14 @@ codex mcp add memforge -- memforge --no-version-check mcp
 
 **C. 本地 marketplace discovery（仅开发/调试）**
 
-Codex CLI 0.130 暴露 marketplace 管理，但没有 standalone `plugin install/list/details` 子命令。从源码 checkout：
+Codex CLI 0.132 暴露 marketplace 管理和 plugin install/remove 命令。在运行 `make package-plugins` 后，从打包 checkout：
 
 ```bash
 codex plugin marketplace add "$PWD"
+codex plugin add memforge@memforge-codex-marketplace
 ```
 
-这仅验证 marketplace discovery，不会完成完整的插件安装。
+这会从 `dist/plugins/codex/memforge` 安装打包 bundle；它不应依赖 `PATH` 上的单独 `memforge` binary。
 
 当前 Claude Code 与 Codex 分发细节见 `docs/plugin-distribution.md`。
 

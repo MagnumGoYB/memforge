@@ -54,8 +54,9 @@ flowchart TD
 
   P0 --> P1["config.LoadBase 校验 format=text|json，并读取 MEMFORGE_NO_VERSION_CHECK"]
   P1 --> P2["config.ResolveStorageRoot: MEMFORGE_HOME，否则 XDG_DATA_HOME/memforge，否则 ~/.local/share/memforge"]
-  P2 --> P3["project.Detect(--root)"]
-  P3 --> P4["detectRoot: --root 绝对路径，否则 git rev-parse --show-toplevel，否则 cwd"]
+  P2 --> VC["低频版本检查，除非 --no-version-check 或 MEMFORGE_NO_VERSION_CHECK=1"]
+  VC --> P3["project.Detect(--root)"]
+  P3 --> P4["detectRoot: --root 必须存在且是目录，否则 git rev-parse --show-toplevel，否则 cwd"]
   P4 --> P5["detectIdentifier: git remote.origin.url，否则 git root，否则 root"]
   P5 --> P6["CanonicalizeIdentifier: URL/SCP-like 归一化并去掉 .git"]
   P6 --> P7["HashIdentifier: sha256(identifier) 前 16 位 hex"]
@@ -78,7 +79,7 @@ flowchart TD
   Aft --> A1["读取 --from session file"]
   A1 --> A2["memory.EnsureLayout 并 memory.LoadRecords 加载已有 memory"]
   A2 --> A3["provider.Select: 默认 heuristic；未配置 provider 会报错"]
-  A3 --> A4["after.ExtractSessionText: plain 或 JSONL adapters"]
+  A3 --> A4["after.ExtractSessionText: plain、宽松 jsonl，或按 role/message 过滤的 agent adapters"]
   A4 --> A5["从 kind-prefixed blocks 提取 candidates"]
   A5 --> A6["FindDuplicateCandidates: 同 kind 且 title/content 高相似"]
   A6 --> A7["BuildMergeProposals: 同 kind 且 title/tag overlap"]
@@ -89,22 +90,21 @@ flowchart TD
   PM1 --> PM2["append canonical block 到 kind 文件"]
   PM2 --> PM3["file.Sync()"]
   PM3 --> PM4["index.Open(index.sqlite)"]
-  PM4 --> PM5["index.UpsertMemory 在事务内 upsert"]
+  PM4 --> PM5["index.UpsertMemory 在事务内 upsert；index 失败降级为 warning，因为 markdown 是真值源"]
   PM5 --> PM6["SQLite triggers 同步 memories_fts"]
   PM6 --> OUT
 
   S --> S1["index.Open"]
   S1 --> S2["SearchMemories 将 unicode tokens 构造成 quoted prefix FTS MATCH query"]
   S2 --> S3["查询 memories_fts，并按 rowid join memories；过滤 project_id 与可选 kind"]
-  S3 --> S4["扫描 rows、JSON 解析 tags、解析 RFC3339 时间、构造 snippet"]
+  S3 --> S4["扫描 rows、JSON 解析 tags、解析 RFC3339 时间、构建 UTF-8-safe snippet"]
   S4 --> S5["按 BM25 归一值、kind weight、recency、usage_count、effective confidence 计分"]
   S5 --> S6{"--hybrid?"}
   S6 -- "no" --> S7["按 score 排序，分数相同按 updated_at"]
   S6 -- "yes" --> S8["本地 deterministic embedding: FNV hashed 64-dim token vectors"]
   S8 --> S9["70% search score + 30% cosine semantic score"]
   S9 --> S7
-  S7 --> S10["CLI 层 tag filter 在 index search 之后执行"]
-  S10 --> OUT
+  S7 --> OUT
 
   Ctx --> C1["memory.LoadRecords 从所有 kind 文件加载"]
   C1 --> C2["将 --kinds 解析为 memory.Kind 列表"]
@@ -132,7 +132,7 @@ flowchart TD
   Re2 --> Re3["index.Open"]
   Re3 --> Re4["index.RebuildMemories 对比现有 ID 与 markdown record ID"]
   Re4 --> Re5["统计 orphans 与 ghosts"]
-  Re5 --> Re6["DELETE all memories"]
+  Re5 --> Re6["在 rebuild transaction 内 DELETE all memories"]
   Re6 --> Re7["逐条 Upsert parsed markdown record；FTS triggers 重新回放"]
   Re7 --> OUT
 

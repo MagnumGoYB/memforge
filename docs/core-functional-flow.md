@@ -54,8 +54,9 @@ flowchart TD
 
   P0 --> P1["config.LoadBase validates format text|json and MEMFORGE_NO_VERSION_CHECK"]
   P1 --> P2["config.ResolveStorageRoot: MEMFORGE_HOME, else XDG_DATA_HOME/memforge, else ~/.local/share/memforge"]
-  P2 --> P3["project.Detect(--root)"]
-  P3 --> P4["detectRoot: --root absolute path, else git rev-parse --show-toplevel, else cwd"]
+  P2 --> VC["low-frequency version check unless --no-version-check or MEMFORGE_NO_VERSION_CHECK=1"]
+  VC --> P3["project.Detect(--root)"]
+  P3 --> P4["detectRoot: --root must exist and be a directory, else git rev-parse --show-toplevel, else cwd"]
   P4 --> P5["detectIdentifier: git remote.origin.url, else git root, else root"]
   P5 --> P6["CanonicalizeIdentifier: URL/SCP-like normalization and .git trim"]
   P6 --> P7["HashIdentifier: sha256(identifier) first 16 hex chars"]
@@ -78,7 +79,7 @@ flowchart TD
   Aft --> A1["read --from session file"]
   A1 --> A2["memory.EnsureLayout and memory.LoadRecords existing memories"]
   A2 --> A3["provider.Select: heuristic only unless configured provider requested"]
-  A3 --> A4["after.ExtractSessionText: plain or JSONL adapters"]
+  A3 --> A4["after.ExtractSessionText: plain, broad jsonl, or role/message-filtered agent adapters"]
   A4 --> A5["extract candidates from kind-prefixed blocks"]
   A5 --> A6["FindDuplicateCandidates by same kind and title/content similarity"]
   A6 --> A7["BuildMergeProposals by same kind plus title/tag overlap"]
@@ -89,22 +90,21 @@ flowchart TD
   PM1 --> PM2["append canonical block to kind file"]
   PM2 --> PM3["file.Sync()"]
   PM3 --> PM4["index.Open(index.sqlite)"]
-  PM4 --> PM5["index.UpsertMemory in transaction"]
+  PM4 --> PM5["index.UpsertMemory in transaction; index failure becomes warning because markdown is source of truth"]
   PM5 --> PM6["SQLite triggers update memories_fts"]
   PM6 --> OUT
 
   S --> S1["index.Open"]
   S1 --> S2["SearchMemories builds FTS MATCH query from unicode tokens as quoted prefix terms"]
   S2 --> S3["query memories_fts joined to memories by rowid, filtered by project_id and optional kind"]
-  S3 --> S4["scan rows, JSON-decode tags, parse RFC3339 timestamps, build snippet"]
+  S3 --> S4["scan rows, JSON-decode tags, parse RFC3339 timestamps, build UTF-8-safe snippet"]
   S4 --> S5["score by BM25 norm, kind weight, recency, usage_count, effective confidence"]
   S5 --> S6{"--hybrid?"}
   S6 -- "no" --> S7["sort by score, tie-break updated_at"]
   S6 -- "yes" --> S8["local deterministic embedding: FNV hashed 64-dim token vectors"]
   S8 --> S9["combine 70% search score + 30% cosine semantic score"]
   S9 --> S7
-  S7 --> S10["CLI tag filter is applied after index search"]
-  S10 --> OUT
+  S7 --> OUT
 
   Ctx --> C1["memory.LoadRecords from all kind files"]
   C1 --> C2["parse --kinds into memory.Kind list"]
@@ -132,7 +132,7 @@ flowchart TD
   Re2 --> Re3["index.Open"]
   Re3 --> Re4["index.RebuildMemories compares existing IDs and record IDs"]
   Re4 --> Re5["count orphans and ghosts"]
-  Re5 --> Re6["DELETE all memories"]
+  Re5 --> Re6["DELETE all memories in the rebuild transaction"]
   Re6 --> Re7["Upsert each parsed markdown record; FTS triggers replay"]
   Re7 --> OUT
 
