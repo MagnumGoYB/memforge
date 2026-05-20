@@ -11,10 +11,11 @@ import (
 )
 
 type CompileInput struct {
-	Memories []memory.Record
-	Budget   int
-	Kinds    []memory.Kind
-	Heading  string
+	Memories    []memory.Record
+	Budget      int
+	Kinds       []memory.Kind
+	Heading     string
+	KindWeights map[memory.Kind]int
 }
 
 type Entry struct {
@@ -53,7 +54,7 @@ func CompileContext(input CompileInput) CompileResult {
 		if count.UsedFallback && count.WarningMessage != "" {
 			warnings = appendIfMissing(warnings, count.WarningMessage)
 		}
-		entries = append(entries, Entry{Record: record, Tokens: count.Tokens, Score: scoreRecord(record, now)})
+		entries = append(entries, Entry{Record: record, Tokens: count.Tokens, Score: scoreRecord(record, now, input.KindWeights)})
 	}
 	sort.SliceStable(entries, func(i, j int) bool {
 		if entries[i].Score == entries[j].Score {
@@ -61,7 +62,7 @@ func CompileContext(input CompileInput) CompileResult {
 		}
 		return entries[i].Score > entries[j].Score
 	})
-	selected := allocateBudget(entries, budget)
+	selected := allocateBudget(entries, budget, input.KindWeights)
 	heading := input.Heading
 	if strings.TrimSpace(heading) == "" {
 		heading = "Project Context"
@@ -69,7 +70,7 @@ func CompileContext(input CompileInput) CompileResult {
 	return CompileResult{Markdown: renderContext(heading, selected), Entries: selected, Warnings: warnings}
 }
 
-func allocateBudget(entries []Entry, budget int) []Entry {
+func allocateBudget(entries []Entry, budget int, kindWeights map[memory.Kind]int) []Entry {
 	if budget <= 0 || len(entries) == 0 {
 		return nil
 	}
@@ -112,11 +113,11 @@ func allocateBudget(entries []Entry, budget int) []Entry {
 	}
 	weights := make([]quota, 0, len(kindBuckets))
 	for kind := range kindBuckets {
-		weight := defaultKindWeight(kind)
+		weight := kindWeight(kind, kindWeights)
 		weights = append(weights, quota{kind: kind, tokens: int(math.Floor(float64(budget*weight) / 505.0)), remaining: weight})
 	}
 	sort.SliceStable(weights, func(i, j int) bool {
-		return defaultKindWeight(weights[i].kind) > defaultKindWeight(weights[j].kind)
+		return kindWeight(weights[i].kind, kindWeights) > kindWeight(weights[j].kind, kindWeights)
 	})
 	for i := range weights {
 		quotaLeft := weights[i].tokens
@@ -178,8 +179,8 @@ func renderContext(heading string, entries []Entry) string {
 	return b.String()
 }
 
-func scoreRecord(record memory.Record, now time.Time) float64 {
-	kindWeightNorm := float64(defaultKindWeight(record.Kind)) / 100.0
+func scoreRecord(record memory.Record, now time.Time, kindWeights map[memory.Kind]int) float64 {
+	kindWeightNorm := float64(kindWeight(record.Kind, kindWeights)) / 100.0
 	daysSinceUpdated := now.Sub(record.UpdatedAt).Hours() / 24
 	recencyScore := math.Pow(0.5, daysSinceUpdated/30)
 	usageScore := 0.0
@@ -188,6 +189,13 @@ func scoreRecord(record memory.Record, now time.Time) float64 {
 }
 
 func defaultKindWeight(kind memory.Kind) int {
+	return kindWeight(kind, nil)
+}
+
+func kindWeight(kind memory.Kind, weights map[memory.Kind]int) int {
+	if weight := weights[kind]; weight > 0 {
+		return weight
+	}
 	switch kind {
 	case memory.KindManual:
 		return 100

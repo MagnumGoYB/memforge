@@ -1,6 +1,7 @@
 package config
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -18,6 +19,11 @@ const (
 type BaseSettings struct {
 	Format         string
 	NoVersionCheck bool
+}
+
+type ProjectSettings struct {
+	DefaultBudget int
+	KindWeights   map[string]int
 }
 
 func LoadBase(cmd *cobra.Command) (BaseSettings, error) {
@@ -67,4 +73,63 @@ func ResolveStorageRoot() (string, error) {
 		return "", fmt.Errorf("home directory must be an absolute path")
 	}
 	return filepath.Join(filepath.Clean(homeDir), ".local", "share", "memforge"), nil
+}
+
+func LoadProjectSettings(projectRoot string) (ProjectSettings, error) {
+	settings := ProjectSettings{KindWeights: map[string]int{}}
+	v := viper.New()
+	v.SetConfigType("toml")
+	v.SetConfigName("config")
+	if configHome := strings.TrimSpace(os.Getenv("XDG_CONFIG_HOME")); configHome != "" {
+		v.AddConfigPath(filepath.Join(configHome, "memforge"))
+	} else if home, err := os.UserHomeDir(); err == nil && home != "" {
+		v.AddConfigPath(filepath.Join(home, ".config", "memforge"))
+	}
+	if err := v.ReadInConfig(); err != nil {
+		var notFound viper.ConfigFileNotFoundError
+		if !errors.As(err, &notFound) {
+			return ProjectSettings{}, err
+		}
+	}
+	mergeProjectSettings(&settings, v)
+
+	if strings.TrimSpace(projectRoot) != "" {
+		projectConfig := viper.New()
+		projectConfig.SetConfigFile(filepath.Join(projectRoot, ".memoryrc"))
+		projectConfig.SetConfigType("toml")
+		if err := projectConfig.ReadInConfig(); err != nil {
+			var notFound viper.ConfigFileNotFoundError
+			if !errors.As(err, &notFound) && !os.IsNotExist(err) {
+				return ProjectSettings{}, err
+			}
+		} else {
+			mergeProjectSettings(&settings, projectConfig)
+		}
+	}
+	return settings, nil
+}
+
+func mergeProjectSettings(settings *ProjectSettings, v *viper.Viper) {
+	if v == nil {
+		return
+	}
+	if budget := v.GetInt("default_budget"); budget > 0 {
+		settings.DefaultBudget = budget
+	}
+	for key, value := range v.GetStringMap("kind_weights") {
+		weight, ok := value.(int)
+		if !ok {
+			switch typed := value.(type) {
+			case int64:
+				weight = int(typed)
+				ok = true
+			case float64:
+				weight = int(typed)
+				ok = true
+			}
+		}
+		if ok && weight > 0 {
+			settings.KindWeights[strings.TrimSpace(key)] = weight
+		}
+	}
 }

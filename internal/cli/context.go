@@ -31,6 +31,11 @@ func newContextCmd(streams Streams) *cobra.Command {
 			if err != nil {
 				return userError("%v", err)
 			}
+			projectSettings, kindWeights, err := loadCompileSettings(proj.Root)
+			if err != nil {
+				return userError("%v", err)
+			}
+			resolvedBudget := resolveCLIBudget(cmd, budget, projectSettings)
 			records, err := memory.LoadRecords(derivePaths(storageRoot, proj).MemoriesDir, proj.ID)
 			if err != nil {
 				return internalError(err)
@@ -39,11 +44,11 @@ func newContextCmd(streams Streams) *cobra.Command {
 			if err != nil {
 				return invalidError("%v", err)
 			}
-			result := compiler.CompileContext(compiler.CompileInput{Memories: records, Budget: budget, Kinds: kinds})
+			result := compiler.CompileContext(compiler.CompileInput{Memories: records, Budget: resolvedBudget, Kinds: kinds, KindWeights: kindWeights})
 			for _, warning := range result.Warnings {
 				_, _ = fmt.Fprintln(streams.Stderr, warning)
 			}
-			payload := map[string]any{"budget": budget, "count": len(result.Entries), "context": result.Markdown, "warnings": result.Warnings}
+			payload := map[string]any{"budget": resolvedBudget, "count": len(result.Entries), "context": result.Markdown, "warnings": result.Warnings}
 			if settings.Format == baseconfig.FormatJSON {
 				return internalError(writeJSON(streams.Stdout, payload))
 			}
@@ -52,7 +57,7 @@ func newContextCmd(streams Streams) *cobra.Command {
 		},
 	}
 	cmd.Flags().StringVar(&rootOverride, "root", "", "project root override")
-	cmd.Flags().IntVar(&budget, "budget", 3000, "token budget")
+	cmd.Flags().IntVar(&budget, "budget", 0, "token budget")
 	cmd.Flags().StringVar(&kindsValue, "kinds", "", "comma-separated memory kinds")
 	return cmd
 }

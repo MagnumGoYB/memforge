@@ -9,8 +9,8 @@
 Claude Code 支持 plugin marketplaces。本仓库包含：
 
 ```txt
-plugins/claude-code/memforge/.claude-plugin/plugin.json
-plugins/claude-code/memforge/.mcp.json
+dist/plugins/claude-code/memforge/.claude-plugin/plugin.json
+dist/plugins/claude-code/memforge/.mcp.json
 .claude-plugin/marketplace.json
 ```
 
@@ -25,6 +25,14 @@ plugins/claude-code/memforge/.mcp.json
 ```
 
 发布版插件包会在插件的 `bin/<platform>/` 目录内包含对应平台的 `memforge` runtime binary。用户在安装 Claude Code marketplace 包之前，不需要运行 `go install`，也不需要把单独安装的 `memforge` binary 放到 `PATH` 上。
+
+`memforge-marketplace` entry 指向 `dist/plugins/claude-code/memforge` 下的打包 bundle，所以从源码 checkout 添加或刷新 marketplace 前需要先运行 `make package-plugins`：
+
+```bash
+make package-plugins
+claude plugin marketplace add "$PWD"
+claude plugin install memforge@memforge-marketplace
+```
 
 插件的 MCP 配置通过 bundled Node launcher 启动 server：
 
@@ -65,6 +73,17 @@ dist/plugins/codex/memforge/.mcp.json
 ```
 
 打包后的 Codex plugin bundle 同样包含各平台的 `memforge` runtime，并通过 MCP 配置使用 `bin/memforge-mcp-launcher.js`。当 Codex host 支持本地/私有 marketplace 或 plugin package 安装时，用户不应需要预先把 `memforge` CLI 安装到 `PATH`。
+
+Codex MCP 配置使用相对插件根目录的 launcher 路径，不能依赖 Claude Code 专用环境变量：
+
+```json
+{
+  "command": "node",
+  "args": ["./bin/memforge-mcp-launcher.js"],
+  "cwd": ".",
+  "default_tools_approval_mode": "approve"
+}
+```
 
 Codex CLI 0.132 暴露 marketplace 管理和 plugin install/remove 命令。`memforge-codex-marketplace` entry 指向 `dist/plugins/codex/memforge` 下的打包 bundle，所以从源码 checkout 添加或刷新 marketplace 前需要先运行 `make package-plugins`：
 

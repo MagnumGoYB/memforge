@@ -64,6 +64,7 @@ Body in markdown.
 - `context` 从已保存记忆编译按组输出的 markdown。
 - `before` 合并高优先级记忆与任务相关匹配。
 - `after` 从显式提供的 session 文件提取 candidate memories，报告 duplicates 与 merge proposals，并且只为显式确认的 candidates 写入 markdown。
+- MCP `upsert_project_memory` 按 `kind` 和归一化后的 `title` 创建或更新一条稳定 memory，然后从 markdown 重建 SQLite index。
 - `reindex` 重新解析全部 markdown block 并重建 SQLite 索引。
 
 ## Confidence decay

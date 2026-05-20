@@ -26,7 +26,8 @@ server 通过 stdin/stdout 使用 newline-delimited JSON-RPC。
   "properties": {
     "query": { "type": "string" },
     "kinds": { "type": "array", "items": { "type": "string" } },
-    "limit": { "type": "integer", "minimum": 0 }
+    "limit": { "type": "integer", "minimum": 0 },
+    "hybrid": { "type": "boolean" }
   }
 }
 ```
@@ -48,7 +49,7 @@ server 通过 stdin/stdout 使用 newline-delimited JSON-RPC。
 }
 ```
 
-从已保存记忆编译 agent-ready markdown context。
+从已保存记忆编译 agent-ready markdown context。`budget` 省略或为 `0` 时，server 会使用项目配置（`.memoryrc` 或用户配置），再回退到内置默认值。
 
 ### `save_memory`
 
@@ -68,7 +69,29 @@ server 通过 stdin/stdout 使用 newline-delimited JSON-RPC。
 }
 ```
 
-通过与 `remember` 相同的 markdown-first 路径持久化一条人工确认的 memory。
+通过与 `remember` 相同的 markdown-first 路径持久化一条新的 project memory。当可能更新已有 memory 时，agent 应优先使用 `upsert_project_memory`。
+
+### `upsert_project_memory`
+
+输入 schema：
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["kind", "title", "content"],
+  "properties": {
+    "kind": { "type": "string" },
+    "title": { "type": "string" },
+    "content": { "type": "string" },
+    "tags": { "type": "array", "items": { "type": "string" } }
+  }
+}
+```
+
+按 `kind` 和归一化后的 `title` 创建或更新一条稳定 project memory。返回值包含 memory id，以及 `action: "created"` 或 `action: "updated"`。
+
+enabled Claude Code 与 Codex plugin 可以在 active thread 中由 agent 判断是否调用该工具创建或修订稳定 project memory。该工具仍受 MCP tool approval 与本地存储规则约束：不会自动扫描源代码文件，也不会调用远程 provider。
 
 ### `list_constraints`
 
@@ -101,4 +124,4 @@ server 通过 stdin/stdout 使用 newline-delimited JSON-RPC。
 }
 ```
 
-`task` 为空时行为类似 `compile_context`；提供 `task` 时复用 `before` 的任务条件选择策略。
+`task` 为空时行为类似 `compile_context`；提供 `task` 时复用 `before` 的任务条件选择策略。`budget` 省略或为 `0` 时使用项目配置提供的默认值。

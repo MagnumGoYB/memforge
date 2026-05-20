@@ -7,7 +7,7 @@
   "plugins": [
     {
       "name": "memforge",
-      "source": "./plugins/claude-code/memforge"
+      "source": "./dist/plugins/claude-code/memforge"
     }
   ]
 }

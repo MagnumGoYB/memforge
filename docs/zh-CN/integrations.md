@@ -30,3 +30,5 @@ adapter 会从常见的 `content`、`text`、`message`、`input`、`output` 字�
 ## MCP
 
 当宿主支持 stdio MCP server 时使用 `memforge mcp`。工具 schema 见 `docs/mcp.md`。
+
+已安装的 Claude Code 与 Codex plugin 可以在 active thread 中，由 agent 判断是否调用 `upsert_project_memory` 保存或更新稳定 project memory。这不同于 CLI `after`：`after` 仍是 proposal-first，并且持久化前需要显式 approval。

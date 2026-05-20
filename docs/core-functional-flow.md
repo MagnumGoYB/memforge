@@ -143,15 +143,17 @@ flowchart TD
   M3 --> ML["tools/list returns declared tools"]
   M3 --> MC["tools/call dispatches by tool name"]
   MC --> MT1["search_memory -> index.SearchMemories"]
-  MC --> MT2["compile_context -> memory.LoadRecords + compiler.CompileContext"]
+  MC --> MT2["compile_context -> Load project settings + memory.LoadRecords + compiler.CompileContext"]
   MC --> MT3["save_memory -> memory.NewRecord(source=mcp) + persistMemory"]
+  MC --> MT3B["upsert_project_memory -> create/update by kind+title + rewrite kind markdown + rebuild index"]
   MC --> MT4["list_constraints -> LoadRecords and filter kind=constraint"]
-  MC --> MT5["get_project_context -> optional before-style selection + CompileContext"]
+  MC --> MT5["get_project_context -> load project settings + optional before-style selection + CompileContext"]
   MI --> MOUT["JSON-RPC response"]
   ML --> MOUT
   MT1 --> MOUT
   MT2 --> MOUT
   MT3 --> MOUT
+  MT3B --> MOUT
   MT4 --> MOUT
   MT5 --> MOUT
   MOUT --> OUT
@@ -195,5 +197,7 @@ flowchart LR
 - CLI JSON output is produced by `writeJSON` on stdout; command errors are printed to stderr by `Execute`.
 - MCP tool-call results are JSON-encoded into a text content item inside the JSON-RPC response.
 - `after` is proposal-first: candidates are persisted only when `--approve` allows them and duplicate candidate IDs are excluded.
+- `context`, `before`, `compile_context`, and `get_project_context` read project/user configuration for default budget and kind weights; explicit CLI flags or MCP arguments win.
+- `upsert_project_memory` is the MCP path for enabled-plugin memory maintenance. It updates by `kind` plus normalized `title` and then rebuilds the index from markdown.
 - Provider-backed extraction is recognized but not configured in source; non-heuristic provider names currently return an invalid provider configuration error.
 - Hybrid search is local only: it uses deterministic FNV-token embeddings and cosine reranking, with no provider call in the source path.

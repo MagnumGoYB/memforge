@@ -146,6 +146,21 @@ MEMFORGE_HOME=/absolute/path make run ARGS="diff-summary --from /absolute/path/n
 MEMFORGE_HOME=/absolute/path make run ARGS="debug paths --format json --no-version-check"
 ```
 
+## Project configuration
+
+`context`, `before`, and MCP context tools read optional TOML configuration from the user config file and project root:
+
+```toml
+default_budget = 1200
+
+[kind_weights]
+decision = 99
+bugfix = 95
+constraint = 100
+```
+
+Project `.memoryrc` overrides `$XDG_CONFIG_HOME/memforge/config.toml`. CLI `--budget` and MCP tool `budget` arguments override both. Configuration never stores memory content; memories still live only under `MEMFORGE_HOME` or `$XDG_DATA_HOME/memforge`.
+
 ## AI agent contract
 
 For automation and agent-driven usage, prefer:
@@ -169,6 +184,7 @@ Rules:
 - SQLite is a rebuildable index layer.
 - MVP commands do not make opt-in LLM/provider calls.
 - `after` is proposal-first: it extracts candidate memories from an explicit session file and persists only when `--approve` is provided.
+- Enabled MCP plugins may let the agent create or update stable project memories during a thread through `upsert_project_memory`; this still requires an explicit tool call, never auto-scans the repository, and never calls remote providers.
 - Provider-backed extraction is opt-in and scoped to `after`; other commands stay local/offline.
 - Hybrid search is explicit via `search --hybrid` and uses local deterministic embeddings by default.
 - Session adapters and diff summaries are local transformations over explicitly supplied files or local git output.

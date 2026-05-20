@@ -143,15 +143,17 @@ flowchart TD
   M3 --> ML["tools/list 返回声明的 tools"]
   M3 --> MC["tools/call 按 tool name dispatch"]
   MC --> MT1["search_memory -> index.SearchMemories"]
-  MC --> MT2["compile_context -> memory.LoadRecords + compiler.CompileContext"]
+  MC --> MT2["compile_context -> 加载项目配置 + memory.LoadRecords + compiler.CompileContext"]
   MC --> MT3["save_memory -> memory.NewRecord(source=mcp) + persistMemory"]
+  MC --> MT3B["upsert_project_memory -> 按 kind+title 创建/更新 + rewrite kind markdown + rebuild index"]
   MC --> MT4["list_constraints -> LoadRecords 并过滤 kind=constraint"]
-  MC --> MT5["get_project_context -> 可选 before-style selection + CompileContext"]
+  MC --> MT5["get_project_context -> 加载项目配置 + 可选 before-style selection + CompileContext"]
   MI --> MOUT["JSON-RPC response"]
   ML --> MOUT
   MT1 --> MOUT
   MT2 --> MOUT
   MT3 --> MOUT
+  MT3B --> MOUT
   MT4 --> MOUT
   MT5 --> MOUT
   MOUT --> OUT
@@ -195,5 +197,7 @@ flowchart LR
 - CLI JSON output 由 `writeJSON` 写 stdout；命令错误由 `Execute` 写 stderr。
 - MCP `tools/call` 的 result 会先 JSON encode，再放进 JSON-RPC response 的 text content item。
 - `after` 是 proposal-first：只有 `--approve` 允许且不属于 duplicate 的 candidate 才会持久化。
+- `context`、`before`、`compile_context` 与 `get_project_context` 会读取项目/用户配置中的 default budget 与 kind weights；显式 CLI flags 或 MCP arguments 优先。
+- `upsert_project_memory` 是 enabled-plugin memory maintenance 的 MCP 路径。它按 `kind` 加归一化 `title` 更新，并随后从 markdown 重建 index。
 - Provider extraction 在源码里只识别但未配置；非 heuristic provider 当前会返回 invalid provider configuration error。
 - Hybrid search 只走本地逻辑：FNV-token embedding + cosine rerank，源码路径没有 provider call。

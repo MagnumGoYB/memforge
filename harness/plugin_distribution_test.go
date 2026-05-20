@@ -18,7 +18,7 @@ func TestClaudeCodePluginPackageIsInstallable(t *testing.T) {
 	if plugin.Name != "memforge" || plugin.Version == "" || plugin.MCPServers != "./.mcp.json" {
 		t.Fatalf("unexpected Claude plugin manifest: %#v", plugin)
 	}
-	assertMCPLauncher(t, filepath.Join("plugins", "claude-code", "memforge", ".mcp.json"), "")
+	assertClaudeMCPLauncher(t, filepath.Join("plugins", "claude-code", "memforge", ".mcp.json"))
 
 	var marketplace struct {
 		Name        string `json:"name"`
@@ -35,7 +35,7 @@ func TestClaudeCodePluginPackageIsInstallable(t *testing.T) {
 	if marketplace.Name == "" || marketplace.Description == "" || marketplace.Owner.Name == "" {
 		t.Fatalf("unexpected Claude marketplace metadata: %#v", marketplace)
 	}
-	if len(marketplace.Plugins) != 1 || marketplace.Plugins[0].Name != "memforge" || marketplace.Plugins[0].Source != "./plugins/claude-code/memforge" {
+	if len(marketplace.Plugins) != 1 || marketplace.Plugins[0].Name != "memforge" || marketplace.Plugins[0].Source != "./dist/plugins/claude-code/memforge" {
 		t.Fatalf("unexpected Claude marketplace: %#v", marketplace)
 	}
 }
@@ -51,7 +51,7 @@ func TestCodexPluginPackageIsInstallable(t *testing.T) {
 	if plugin.Name != "memforge" || plugin.Version == "" || plugin.Skills != "./skills/" || plugin.MCPServers != "./.mcp.json" {
 		t.Fatalf("unexpected Codex plugin manifest: %#v", plugin)
 	}
-	assertMCPLauncher(t, filepath.Join("plugins", "codex", "memforge", ".mcp.json"), "approve")
+	assertCodexMCPLauncher(t, filepath.Join("plugins", "codex", "memforge", ".mcp.json"))
 
 	var marketplace struct {
 		Name        string `json:"name"`
@@ -82,6 +82,63 @@ func TestPluginDistributionDocsAreBilingual(t *testing.T) {
 	} {
 		if read(t, path) == "" {
 			t.Fatalf("empty plugin distribution doc: %s", path)
+		}
+	}
+}
+
+func TestPluginSkillsAllowAutomaticMemoryMaintenance(t *testing.T) {
+	for _, path := range []string{
+		filepath.Join("plugins", "claude-code", "memforge", "skills", "memforge-memory", "SKILL.md"),
+		filepath.Join("plugins", "codex", "memforge", "skills", "memforge-memory", "SKILL.md"),
+	} {
+		skill := read(t, path)
+		for _, expected := range []string{
+			"upsert_project_memory",
+			"without asking for separate confirmation",
+			"Do not auto-scan",
+		} {
+			if !strings.Contains(skill, expected) {
+				t.Fatalf("%s must contain %q", path, expected)
+			}
+		}
+		for _, forbidden := range []string{
+			"save_memory only after human confirmation",
+			"save_memory only for human-confirmed memories",
+			"do not persist candidates unless the user has approved them",
+		} {
+			if strings.Contains(skill, forbidden) {
+				t.Fatalf("%s must not retain old confirmation-only wording %q", path, forbidden)
+			}
+		}
+	}
+}
+
+func TestMCPDocsCoverPublishedTools(t *testing.T) {
+	for _, path := range []string{
+		filepath.Join("docs", "mcp.md"),
+		filepath.Join("docs", "zh-CN", "mcp.md"),
+	} {
+		doc := read(t, path)
+		for _, expected := range []string{
+			"search_memory",
+			"compile_context",
+			"save_memory",
+			"upsert_project_memory",
+			"list_constraints",
+			"get_project_context",
+			"hybrid",
+		} {
+			if !strings.Contains(doc, expected) {
+				t.Fatalf("%s must document %q", path, expected)
+			}
+		}
+		for _, forbidden := range []string{
+			"human-confirmed memory",
+			"人工确认的 memory",
+		} {
+			if strings.Contains(doc, forbidden) {
+				t.Fatalf("%s must not retain old MCP wording %q", path, forbidden)
+			}
 		}
 	}
 }
@@ -137,7 +194,7 @@ func mustReadJSON(t *testing.T, path string, out any) {
 	}
 }
 
-func assertMCPLauncher(t *testing.T, path string, wantApproval string) {
+func assertClaudeMCPLauncher(t *testing.T, path string) {
 	t.Helper()
 	var config struct {
 		MCPServers map[string]struct {
@@ -158,7 +215,34 @@ func assertMCPLauncher(t *testing.T, path string, wantApproval string) {
 	if server.Env["MEMFORGE_PLUGIN_ROOT"] != "${CLAUDE_PLUGIN_ROOT}" {
 		t.Fatalf("unexpected MCP launcher env in %s: %#v", path, server.Env)
 	}
-	if wantApproval != "" && server.DefaultToolsApprovalMode != wantApproval {
+	if read(t, filepath.Join(filepath.Dir(path), "bin", "memforge-mcp-launcher.js")) == "" {
+		t.Fatalf("empty MCP launcher referenced by %s", path)
+	}
+}
+
+func assertCodexMCPLauncher(t *testing.T, path string) {
+	t.Helper()
+	var config struct {
+		MCPServers map[string]struct {
+			Command                  string            `json:"command"`
+			Args                     []string          `json:"args"`
+			CWD                      string            `json:"cwd"`
+			Env                      map[string]string `json:"env"`
+			DefaultToolsApprovalMode string            `json:"default_tools_approval_mode"`
+		} `json:"mcpServers"`
+	}
+	mustReadJSON(t, path, &config)
+	server, ok := config.MCPServers["memforge"]
+	if !ok {
+		t.Fatalf("%s missing memforge MCP server", path)
+	}
+	if server.Command != "node" || len(server.Args) != 1 || server.Args[0] != "./bin/memforge-mcp-launcher.js" || server.CWD != "." {
+		t.Fatalf("unexpected Codex MCP launcher in %s: %#v", path, server)
+	}
+	if _, ok := server.Env["MEMFORGE_PLUGIN_ROOT"]; ok {
+		t.Fatalf("Codex MCP launcher must not rely on plugin root env in %s: %#v", path, server.Env)
+	}
+	if server.DefaultToolsApprovalMode != "approve" {
 		t.Fatalf("unexpected MCP approval mode in %s: %q", path, server.DefaultToolsApprovalMode)
 	}
 	if read(t, filepath.Join(filepath.Dir(path), "bin", "memforge-mcp-launcher.js")) == "" {

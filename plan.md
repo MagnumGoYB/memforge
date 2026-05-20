@@ -621,9 +621,10 @@ Add MCP server support (stdio).
 Tools (each must publish a JSON schema in `docs/mcp.md`):
 
 ```txt
-search_memory       { query: string, kinds?: string[], limit?: int }
-compile_context     { budget: int, kinds?: string[] }
+search_memory       { query: string, kinds?: string[], limit?: int, hybrid?: bool }
+compile_context     { budget?: int, kinds?: string[] }
 save_memory         { kind: string, title: string, content: string, tags?: string[] }
+upsert_project_memory { kind: string, title: string, content: string, tags?: string[] }
 list_constraints    { limit?: int }
 get_project_context { task?: string, budget?: int }
 ```
@@ -633,10 +634,10 @@ Agent workflow:
 ```txt
 Task Start    -> compile_context | get_project_context
 During Coding -> search_memory
-After Coding  -> save_memory candidates (human-confirmed)
+After Coding  -> save_memory for explicit new memories, or upsert_project_memory for stable agent-selected memory maintenance
 ```
 
-The MCP server must reuse the same CLI guardrails: no remote network, no auto-scan, JSON-only on stdout.
+The MCP server must reuse the same CLI guardrails: no remote network, no auto-scan, JSON-only on stdout. Enabled plugins may let the agent decide to call `upsert_project_memory` during a thread, while CLI `after` remains proposal-first and human-approved.
 
 ---
 
