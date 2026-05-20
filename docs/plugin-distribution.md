@@ -54,7 +54,9 @@ This source-checkout flow is for local development and debugging only. It is not
 
 ## Codex
 
-Codex supports plugin manifests and marketplace/catalog installation flows, but public self-service publishing is still limited. This repository includes a local/private distribution package:
+> **Official Codex plugin store status:** OpenAI's self-serve plugin publishing is not yet available (marked "coming soon" in OpenAI docs as of May 2026). MemForge is not listed in the Codex official plugin browser (`/plugins`). When public publishing opens and MemForge is accepted, users will be able to install directly from the Codex plugin browser without any manual setup.
+
+Codex supports plugin manifests and marketplace/catalog installation flows. This repository includes a local/private distribution package:
 
 ```txt
 plugins/codex/memforge/.codex-plugin/plugin.json
