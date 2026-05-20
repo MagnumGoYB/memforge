@@ -33,7 +33,7 @@ This repository uses GitHub-native automation for pull requests, review prompts,
 ## CI Flow
 
 - `.github/workflows/ci.yml` runs `make validate` and `make test-harness` on Ubuntu using the pinned Go toolchain.
-- Workflows use Node 24 action majors such as `actions/checkout@v6`, `actions/setup-go@v6`, and `actions/github-script@v8`.
+- Workflows use current Node 24 action majors such as `actions/checkout`, `actions/setup-go`, `actions/github-script`, `actions/upload-artifact`, `actions/download-artifact`, and `softprops/action-gh-release`; harness checks should verify required workflow capabilities rather than pinning a specific action major.
 
 ## Release Flow
 

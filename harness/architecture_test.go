@@ -95,7 +95,7 @@ func TestReleaseWorkflowBuildsPackagesSmokesAndPublishesAssets(t *testing.T) {
 		"MEMFORGE_PLUGIN_ROOT",
 		"memforge-mcp-launcher.js",
 		"tools/list",
-		"softprops/action-gh-release@v2",
+		"softprops/action-gh-release",
 	} {
 		if !strings.Contains(releaseWorkflow, expected) {
 			t.Fatalf("release workflow must contain %s", expected)

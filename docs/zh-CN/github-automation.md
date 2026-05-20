@@ -33,7 +33,7 @@
 ## CI 流程
 
 - `.github/workflows/ci.yml` 在 Ubuntu 上跑 `make validate` 与 `make test-harness`，使用固定 Go 工具链版本。
-- 工作流使用 Node 24 主版本 Action：`actions/checkout@v6`、`actions/setup-go@v6`、`actions/github-script@v8`。
+- 工作流使用当前 Node 24 主版本 Action：`actions/checkout`、`actions/setup-go`、`actions/github-script`、`actions/upload-artifact`、`actions/download-artifact`、`softprops/action-gh-release`；harness 应验证必要 workflow 能力，而不是固定某个 action major。
 
 ## 发版流程
 
