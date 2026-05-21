@@ -48,6 +48,17 @@ MemForge 是一个面向 AI coding workflow 的本地项目上下文编译器。
 
 根据使用方式选择一条路径。
 
+### 先更新宿主应用
+
+在更新 MemForge 插件之前，先把运行它的宿主应用更新到最新版：
+
+```bash
+codex update
+claude update
+```
+
+如果你还在用 Claude Code 的旧命令名，`claude upgrade` 也可以。若你使用的是 Codex.app，请先通过它自己的应用更新通道把桌面应用更新到最新版，然后再重新安装或刷新插件包。
+
 ### 1. Claude Code 插件安装
 
 这是 Claude Code 用户推荐路径。通过 Claude Code marketplace 或 release catalog 安装插件：

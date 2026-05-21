@@ -48,6 +48,17 @@ Implemented now:
 
 Choose one path based on how you want to use MemForge.
 
+### Update first
+
+Before updating MemForge plugins, update the host app you use to run them:
+
+```bash
+codex update
+claude update
+```
+
+If you use Claude Code's older CLI naming, `claude upgrade` is also accepted. If you use Codex.app, update the desktop app through its own app update flow first, then reinstall or refresh the plugin package.
+
 ### 1. Claude Code plugin install
 
 This is the recommended path for Claude Code users. Install the plugin from a Claude Code marketplace or release catalog:
