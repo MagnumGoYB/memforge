@@ -7,5 +7,8 @@
   },
   "repository": "https://github.com/MagnumGOYB/memforge",
   "license": "MIT",
-  "mcpServers": "./.mcp.json"
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "MemForge"
+  }
 }

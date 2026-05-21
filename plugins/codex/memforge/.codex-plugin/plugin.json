@@ -3,5 +3,8 @@
   "version": "0.1.4",
   "description": "MemForge local-first project memory tools for Codex.",
   "skills": "./skills/",
-  "mcpServers": "./.mcp.json"
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "MemForge"
+  }
 }

@@ -15,9 +15,12 @@ func TestClaudeCodePluginPackageIsInstallable(t *testing.T) {
 		Description string `json:"description"`
 		Version     string `json:"version"`
 		MCPServers  string `json:"mcpServers"`
+		Interface   struct {
+			DisplayName string `json:"displayName"`
+		} `json:"interface"`
 	}
 	mustReadJSON(t, filepath.Join("plugins", "claude-code", "memforge", ".claude-plugin", "plugin.json"), &plugin)
-	if plugin.Name != "memforge" || plugin.Version != version || plugin.MCPServers != "./.mcp.json" {
+	if plugin.Name != "memforge" || plugin.Version != version || plugin.MCPServers != "./.mcp.json" || plugin.Interface.DisplayName != "MemForge" {
 		t.Fatalf("unexpected Claude plugin manifest: %#v", plugin)
 	}
 	assertClaudeMCPLauncher(t, filepath.Join("plugins", "claude-code", "memforge", ".mcp.json"))
@@ -53,9 +56,12 @@ func TestCodexPluginPackageIsInstallable(t *testing.T) {
 		Version     string `json:"version"`
 		Skills      string `json:"skills"`
 		MCPServers  string `json:"mcpServers"`
+		Interface   struct {
+			DisplayName string `json:"displayName"`
+		} `json:"interface"`
 	}
 	mustReadJSON(t, filepath.Join("plugins", "codex", "memforge", ".codex-plugin", "plugin.json"), &plugin)
-	if plugin.Name != "memforge" || plugin.Version != version || plugin.Skills != "./skills/" || plugin.MCPServers != "./.mcp.json" {
+	if plugin.Name != "memforge" || plugin.Version != version || plugin.Skills != "./skills/" || plugin.MCPServers != "./.mcp.json" || plugin.Interface.DisplayName != "MemForge" {
 		t.Fatalf("unexpected Codex plugin manifest: %#v", plugin)
 	}
 	assertCodexMCPLauncher(t, filepath.Join("plugins", "codex", "memforge", ".mcp.json"))
