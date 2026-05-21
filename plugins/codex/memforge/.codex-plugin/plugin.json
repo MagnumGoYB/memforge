@@ -1,6 +1,6 @@
 {
   "name": "memforge",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "description": "MemForge local-first project memory tools for Codex.",
   "skills": "./skills/",
   "mcpServers": "./.mcp.json",
