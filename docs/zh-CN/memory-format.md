@@ -22,6 +22,8 @@ $MEMFORGE_HOME/projects/{project_id}/memories/
 - `api-contract` → `api-contracts.md`
 - `agent-instruction` → `agent-instructions.md`
 
+可接受的 kind alias 会在写入前归一化：`note` 存为 `manual`，`domain` 存为 `convention`，`workflow` 存为 `agent-instruction`。
+
 ## Canonical block 形态
 
 每条 memory 以一个 append-only block 保存：

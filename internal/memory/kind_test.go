@@ -10,6 +10,23 @@ func TestParseKindAcceptsKnownKinds(t *testing.T) {
 	}
 }
 
+func TestParseKindAcceptsAgentFriendlyAliases(t *testing.T) {
+	tests := map[string]Kind{
+		"workflow": KindAgentInstruction,
+		"note":     KindManual,
+		"domain":   KindConvention,
+	}
+	for value, want := range tests {
+		got, err := ParseKind(value)
+		if err != nil {
+			t.Fatalf("unexpected error for %q: %v", value, err)
+		}
+		if got != want {
+			t.Fatalf("ParseKind(%q)=%q, want %q", value, got, want)
+		}
+	}
+}
+
 func TestParseKindRejectsUnknownKind(t *testing.T) {
 	if _, err := ParseKind("unknown"); err == nil {
 		t.Fatal("expected error")

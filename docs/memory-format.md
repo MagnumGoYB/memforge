@@ -22,6 +22,8 @@ Current file mapping:
 - `api-contract` → `api-contracts.md`
 - `agent-instruction` → `agent-instructions.md`
 
+Accepted kind aliases are normalized before storage: `note` stores as `manual`, `domain` stores as `convention`, and `workflow` stores as `agent-instruction`.
+
 ## Canonical block shape
 
 Each memory is stored as one append-only block:

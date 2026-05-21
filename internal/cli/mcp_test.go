@@ -187,6 +187,54 @@ func TestExecuteMCPUpsertProjectMemoryUpdatesExistingTitle(t *testing.T) {
 	}
 }
 
+func TestExecuteMCPUpsertProjectMemoryAcceptsAgentFriendlyKindAliases(t *testing.T) {
+	storage := filepath.Join(t.TempDir(), "storage")
+	t.Setenv("MEMFORGE_HOME", storage)
+	projectRoot := t.TempDir()
+	input := strings.Join([]string{
+		`{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"upsert_project_memory","arguments":{"kind":"workflow","title":"Release workflow","content":"Use Makefile targets for validation.","tags":["release"]}}}`,
+		`{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"upsert_project_memory","arguments":{"kind":"note","title":"Homepage config","content":"Keep homepage config on the shared path.","tags":["home-config"]}}}`,
+		`{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"upsert_project_memory","arguments":{"kind":"domain","title":"Membership gating","content":"Reuse shared gating helpers.","tags":["membership"]}}}`,
+	}, "\n") + "\n"
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	code := Execute([]string{"mcp", "--root", projectRoot}, Streams{Stdin: strings.NewReader(input), Stdout: &stdout, Stderr: &stderr})
+	if code != 0 {
+		t.Fatalf("code=%d stderr=%s", code, stderr.String())
+	}
+	lines := strings.Split(strings.TrimSpace(stdout.String()), "\n")
+	if len(lines) != 3 {
+		t.Fatalf("unexpected responses: %s", stdout.String())
+	}
+	for i, line := range lines {
+		payload := decodeMCPTextPayload(t, line)
+		if payload["action"] != "created" {
+			t.Fatalf("line %d action=%v, want created: %v", i, payload["action"], payload)
+		}
+	}
+	matches, err := filepath.Glob(filepath.Join(storage, "projects", "*", "memories", "*.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	files := map[string]string{}
+	for _, match := range matches {
+		data, err := os.ReadFile(match)
+		if err != nil {
+			t.Fatal(err)
+		}
+		files[filepath.Base(match)] = string(data)
+	}
+	if !strings.Contains(files["agent-instructions.md"], "kind=agent-instruction") || !strings.Contains(files["agent-instructions.md"], "Release workflow") {
+		t.Fatalf("workflow alias should be stored as agent-instruction: %v", files)
+	}
+	if !strings.Contains(files["manual.md"], "kind=manual") || !strings.Contains(files["manual.md"], "Homepage config") {
+		t.Fatalf("note alias should be stored as manual: %v", files)
+	}
+	if !strings.Contains(files["conventions.md"], "kind=convention") || !strings.Contains(files["conventions.md"], "Membership gating") {
+		t.Fatalf("domain alias should be stored as convention: %v", files)
+	}
+}
+
 func TestExecuteMCPSearchFindsPartialMatchesForBroadQueries(t *testing.T) {
 	storage := filepath.Join(t.TempDir(), "storage")
 	t.Setenv("MEMFORGE_HOME", storage)

@@ -30,6 +30,12 @@ var defaultFiles = []struct {
 	{Kind: KindAgentInstruction, File: "agent-instructions.md"},
 }
 
+var kindAliases = map[string]Kind{
+	"workflow": KindAgentInstruction,
+	"note":     KindManual,
+	"domain":   KindConvention,
+}
+
 func DefaultFileNames() []string {
 	files := make([]string, 0, len(defaultFiles))
 	for _, entry := range defaultFiles {
@@ -40,6 +46,9 @@ func DefaultFileNames() []string {
 
 func ParseKind(value string) (Kind, error) {
 	value = strings.TrimSpace(value)
+	if alias, ok := kindAliases[value]; ok {
+		return alias, nil
+	}
 	for _, entry := range defaultFiles {
 		if string(entry.Kind) == value {
 			return entry.Kind, nil
