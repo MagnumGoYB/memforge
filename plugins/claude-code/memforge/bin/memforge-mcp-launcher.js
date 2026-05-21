@@ -34,8 +34,18 @@ if (!arch) {
 const pluginRoot = process.env.MEMFORGE_PLUGIN_ROOT || path.resolve(__dirname, '..');
 const binaryName = os === 'windows' ? 'memforge.exe' : 'memforge';
 const binaryPath = path.join(pluginRoot, 'bin', `${os}-${arch}`, binaryName);
+const inheritedPWD = process.env.PWD;
+const projectRoot = process.env.MEMFORGE_PROJECT_ROOT ||
+  (inheritedPWD && path.isAbsolute(inheritedPWD) && path.resolve(inheritedPWD) !== path.resolve(pluginRoot)
+    ? inheritedPWD
+    : '');
+const args = ['--no-version-check', 'mcp'];
 
-const child = spawn(binaryPath, ['--no-version-check', 'mcp'], {
+if (projectRoot) {
+  args.push('--root', projectRoot);
+}
+
+const child = spawn(binaryPath, args, {
   stdio: 'inherit',
   env: process.env,
 });

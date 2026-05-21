@@ -107,6 +107,57 @@ func TestSearchMemoriesHybridKeepsMatchesSearchable(t *testing.T) {
 	}
 }
 
+func TestSearchMemoriesFallsBackToPartialMatchesForBroadQueries(t *testing.T) {
+	db, err := Open(filepath.Join(t.TempDir(), "index.sqlite"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer db.Close()
+	now := time.Date(2026, 5, 21, 10, 0, 0, 0, time.UTC)
+	for _, record := range []MemoryRecord{
+		{
+			ID:         "mem_display",
+			ProjectID:  "project-1",
+			Kind:       "agent-instruction",
+			Title:      "Plugin display name uses interface metadata",
+			Content:    "Use interface displayName MemForge for UI display casing.",
+			Tags:       []string{"plugin", "display-name"},
+			Confidence: 1,
+			CreatedAt:  now,
+			UpdatedAt:  now,
+		},
+		{
+			ID:         "mem_release",
+			ProjectID:  "project-1",
+			Kind:       "agent-instruction",
+			Title:      "Release acceptance checks plugin assets and curl latest",
+			Content:    "Validate release assets and curl latest install.",
+			Tags:       []string{"release", "curl"},
+			Confidence: 1,
+			CreatedAt:  now,
+			UpdatedAt:  now,
+		},
+	} {
+		if err := UpsertMemory(context.Background(), db, record); err != nil {
+			t.Fatal(err)
+		}
+	}
+	results, err := SearchMemories(context.Background(), db, SearchQuery{ProjectID: "project-1", Query: "MemForge plugin displayName bundled runtimes release acceptance curl latest shared MEMFORGE_HOME", Limit: 10, Hybrid: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(results) < 2 {
+		t.Fatalf("broad query should return partial matches, got %#v", results)
+	}
+	seen := map[string]bool{}
+	for _, result := range results {
+		seen[result.ID] = true
+	}
+	if !seen["mem_display"] || !seen["mem_release"] {
+		t.Fatalf("broad query missed expected partial matches: %#v", results)
+	}
+}
+
 func TestSearchMemoriesConfidenceDecayKeepsOldDecisionBelowConstraint(t *testing.T) {
 	db, err := Open(filepath.Join(t.TempDir(), "index.sqlite"))
 	if err != nil {

@@ -253,6 +253,24 @@ func TestPluginPackagingAutomationIsPresent(t *testing.T) {
 	}
 }
 
+func TestPluginLaunchersForwardProjectRoot(t *testing.T) {
+	for _, path := range []string{
+		filepath.Join("plugins", "claude-code", "memforge", "bin", "memforge-mcp-launcher.js"),
+		filepath.Join("plugins", "codex", "memforge", "bin", "memforge-mcp-launcher.js"),
+	} {
+		launcher := read(t, path)
+		for _, expected := range []string{
+			"MEMFORGE_PROJECT_ROOT",
+			"process.env.PWD",
+			"args.push('--root', projectRoot)",
+		} {
+			if !strings.Contains(launcher, expected) {
+				t.Fatalf("%s must forward project root with %q", path, expected)
+			}
+		}
+	}
+}
+
 func TestCurlInstallPathIsDocumentedAndGuarded(t *testing.T) {
 	scriptPath := filepath.Join(repoRoot(t), "scripts", "install.sh")
 	info, err := os.Stat(scriptPath)

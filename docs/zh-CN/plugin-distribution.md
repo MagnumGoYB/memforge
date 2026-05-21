@@ -46,7 +46,7 @@ claude plugin install memforge@memforge-marketplace
 }
 ```
 
-Launcher 会解析当前平台，选择 bundled runtime，并从该 runtime 启动 stdio MCP server。
+Launcher 会解析当前平台，选择 bundled runtime，并从该 runtime 启动 stdio MCP server。它会在设置了 `MEMFORGE_PROJECT_ROOT` 时把该值作为项目根目录传给 runtime；否则在继承到的绝对路径 `PWD` 不是插件根目录时使用该 `PWD`。这样 project memories 会绑定到用户仓库，而不是插件 cache 目录。
 
 ### 本地开发 smoke
 
@@ -102,6 +102,8 @@ codex mcp add memforge -- memforge --no-version-check mcp
 
 直接 `codex mcp add` 可以避免额外保留一个本地 marketplace entry，但它只是开发/调试 fallback，不是 packaged plugin 的 runtime path。它使用 `PATH` 上的 `memforge` binary；打包后的 Codex plugin bundle 使用 bundled launcher。Codex MCP 配置设置 `default_tools_approval_mode` 为 `approve`，因此非交互 `codex exec` 可以完成 MemForge MCP tool call。
 
+Bundled launcher 会在设置了 `MEMFORGE_PROJECT_ROOT` 时把它传给 runtime；否则在继承到的绝对路径 `PWD` 不是插件根目录时使用该 `PWD`。如果某个 host 从 cache 目录启动插件且没有保留项目 `PWD`，请在 MCP 环境中设置 `MEMFORGE_PROJECT_ROOT=/absolute/path/to/project`，确保 Claude Code、Codex 与 CLI 写入同一个 project memory store。
+
 ## Release 与 CI 打包
 
 GitHub release workflow 会构建多平台 `memforge` binaries，运行仓库与 harness 校验，用 `tools/package_plugins.sh` 打包 MemForge Claude Code 和 Codex plugin zips，通过 Node launcher smoke bundled Claude runtime，并把 standalone binaries 与 plugin zip assets 上传到 release。
@@ -130,5 +132,6 @@ MEMFORGE_INSTALL_DIR="$HOME/bin" MEMFORGE_VERSION="latest" \
 1. marketplace/release plugin 可以在没有单独 `memforge` binary 位于 `PATH` 的情况下启动。
 2. `bin/memforge-mcp-launcher.js` 会为当前平台选择 bundled runtime。
 3. bundled runtime 能响应 MCP `tools/list`。
-4. `save_memory` 可以持久化 memory。
-5. `search_memory` 可以检索到它。
+4. launcher 会转发 project root，使写入落到与 `memforge --root /path/to/project` 相同的 project id。
+5. `save_memory` 可以持久化 memory。
+6. `search_memory` 可以检索到它，包括需要 partial-match fallback 的多主题宽泛查询。

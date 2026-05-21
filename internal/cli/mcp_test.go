@@ -102,6 +102,39 @@ func TestExecuteMCPUpsertProjectMemoryUpdatesExistingTitle(t *testing.T) {
 	}
 }
 
+func TestExecuteMCPSearchFindsPartialMatchesForBroadQueries(t *testing.T) {
+	storage := filepath.Join(t.TempDir(), "storage")
+	t.Setenv("MEMFORGE_HOME", storage)
+	projectRoot := t.TempDir()
+	input := strings.Join([]string{
+		`{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"upsert_project_memory","arguments":{"kind":"agent-instruction","title":"Plugin display name uses interface metadata","content":"Use interface displayName MemForge for UI display casing.","tags":["plugin","display-name"]}}}`,
+		`{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"upsert_project_memory","arguments":{"kind":"agent-instruction","title":"Release acceptance checks plugin assets and curl latest","content":"Validate release assets and curl latest install.","tags":["release","curl"]}}}`,
+		`{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"search_memory","arguments":{"query":"MemForge plugin displayName bundled runtimes release acceptance curl latest shared MEMFORGE_HOME","limit":10,"hybrid":true}}}`,
+	}, "\n") + "\n"
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	code := Execute([]string{"mcp", "--root", projectRoot}, Streams{Stdin: strings.NewReader(input), Stdout: &stdout, Stderr: &stderr})
+	if code != 0 {
+		t.Fatalf("code=%d stderr=%s", code, stderr.String())
+	}
+	lines := strings.Split(strings.TrimSpace(stdout.String()), "\n")
+	if len(lines) != 3 {
+		t.Fatalf("unexpected responses: %s", stdout.String())
+	}
+	search := decodeMCPTextPayload(t, lines[2])
+	if got := int(search["count"].(float64)); got < 2 {
+		t.Fatalf("search count=%d, want at least 2: %v", got, search)
+	}
+	text := search["results"].([]any)
+	joined, err := json.Marshal(text)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(joined), "Plugin display name uses interface metadata") || !strings.Contains(string(joined), "Release acceptance checks plugin assets and curl latest") {
+		t.Fatalf("search missed expected memories: %s", string(joined))
+	}
+}
+
 func TestExecuteMCPUpsertProjectMemoryPreservesOtherKindRecords(t *testing.T) {
 	storage := filepath.Join(t.TempDir(), "storage")
 	t.Setenv("MEMFORGE_HOME", storage)

@@ -46,7 +46,7 @@ The plugin MCP configuration starts the server through the bundled Node launcher
 }
 ```
 
-The launcher resolves the current platform, selects the bundled runtime, and starts the stdio MCP server from that runtime.
+The launcher resolves the current platform, selects the bundled runtime, and starts the stdio MCP server from that runtime. It forwards the project root to the runtime by using `MEMFORGE_PROJECT_ROOT` when set, otherwise an inherited absolute `PWD` when that path is not the plugin root. This keeps project memories attached to the user's repository instead of the plugin cache directory.
 
 ### Local development smoke
 
@@ -102,6 +102,8 @@ codex mcp add memforge -- memforge --no-version-check mcp
 
 Direct `codex mcp add` avoids carrying an extra local marketplace entry, but it is a development/debugging fallback rather than the packaged plugin runtime path. It uses the `memforge` binary on `PATH`; packaged Codex plugin bundles use the bundled launcher instead. The Codex MCP config sets `default_tools_approval_mode` to `approve` so non-interactive `codex exec` can complete MemForge MCP tool calls.
 
+The bundled launcher forwards the project root to the runtime with `MEMFORGE_PROJECT_ROOT` when set, otherwise with an inherited absolute `PWD` when that path is not the plugin root. If a host launches the plugin from a cache directory without preserving the project `PWD`, set `MEMFORGE_PROJECT_ROOT=/absolute/path/to/project` in the MCP environment so Claude Code, Codex, and the CLI write to the same project memory store.
+
 ## Release and CI packaging
 
 The GitHub release workflow builds multi-platform `memforge` binaries, runs repository and harness validation, packages the MemForge Claude Code and Codex plugin zips with `tools/package_plugins.sh`, smokes the bundled Claude runtime through the Node launcher, and uploads both standalone binaries and plugin zip assets to the release.
@@ -130,5 +132,6 @@ Repository validation checks plugin manifests, launcher configuration, packaging
 1. A marketplace/release plugin can start without a separate `memforge` binary on `PATH`.
 2. `bin/memforge-mcp-launcher.js` selects the bundled runtime for the current platform.
 3. The bundled runtime responds to MCP `tools/list`.
-4. `save_memory` can persist a memory.
-5. `search_memory` can retrieve it.
+4. The launcher forwards the project root so writes land under the same project id as `memforge --root /path/to/project`.
+5. `save_memory` can persist a memory.
+6. `search_memory` can retrieve it, including broad multi-topic queries that require partial-match fallback.

@@ -44,7 +44,8 @@ type SearchResult struct {
 var tokenPattern = regexp.MustCompile(`[\pL\pN][\pL\pN_-]*`)
 
 func SearchMemories(ctx context.Context, db *sql.DB, query SearchQuery) ([]SearchResult, error) {
-	matchExpr := buildMatchQuery(query.Query)
+	tokens := queryTokens(query.Query)
+	matchExpr := buildMatchQueryFromTokens(tokens, " ")
 	if matchExpr == "" {
 		return nil, fmt.Errorf("query is required")
 	}
@@ -53,6 +54,25 @@ func SearchMemories(ctx context.Context, db *sql.DB, query SearchQuery) ([]Searc
 		limit = 20
 	}
 	requiredTags := normalizeTags(query.Tags)
+	results, err := searchMemoriesFTS(ctx, db, query, matchExpr, requiredTags, limit)
+	if err != nil {
+		return nil, err
+	}
+	if len(results) == 0 && len(tokens) > 1 {
+		fallbackExpr := buildMatchQueryFromTokens(tokens, " OR ")
+		results, err = searchMemoriesFTS(ctx, db, query, fallbackExpr, requiredTags, limit)
+		if err != nil {
+			return nil, err
+		}
+	}
+	scoreResults(results)
+	if query.Hybrid {
+		rerankHybrid(results, query.Query)
+	}
+	return results, nil
+}
+
+func searchMemoriesFTS(ctx context.Context, db *sql.DB, query SearchQuery, matchExpr string, requiredTags []string, limit int) ([]SearchResult, error) {
 	args := []any{query.ProjectID, matchExpr}
 	sqlText := `SELECT m.id, m.project_id, m.kind, m.title, m.content, m.tags_json, m.source, m.confidence, m.usage_count, m.created_at, m.updated_at, bm25(memories_fts)
 	FROM memories_fts
@@ -115,15 +135,28 @@ func SearchMemories(ctx context.Context, db *sql.DB, query SearchQuery) ([]Searc
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
-	scoreResults(results)
-	if query.Hybrid {
-		rerankHybrid(results, query.Query)
-	}
 	return results, nil
 }
 
 func buildMatchQuery(raw string) string {
+	return buildMatchQueryFromTokens(queryTokens(raw), " ")
+}
+
+func queryTokens(raw string) []string {
 	tokens := tokenPattern.FindAllString(strings.ToLower(raw), -1)
+	seen := map[string]struct{}{}
+	out := make([]string, 0, len(tokens))
+	for _, token := range tokens {
+		if _, ok := seen[token]; ok {
+			continue
+		}
+		seen[token] = struct{}{}
+		out = append(out, token)
+	}
+	return out
+}
+
+func buildMatchQueryFromTokens(tokens []string, sep string) string {
 	if len(tokens) == 0 {
 		return ""
 	}
@@ -131,7 +164,7 @@ func buildMatchQuery(raw string) string {
 	for _, token := range tokens {
 		parts = append(parts, fmt.Sprintf(`"%s"*`, token))
 	}
-	return strings.Join(parts, " ")
+	return strings.Join(parts, sep)
 }
 
 func normalizeTags(tags []string) []string {
