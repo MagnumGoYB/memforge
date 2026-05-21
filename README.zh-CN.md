@@ -105,6 +105,51 @@ codex plugin add memforge@memforge-codex-marketplace
 
 当前 Claude Code 与 Codex 分发细节见 `docs/plugin-distribution.md`。
 
+### 手动更新插件
+
+打包插件会自带 `memforge` runtime。只更新单独安装的 CLI，不会更新已经安装的插件包。
+
+如果是 Codex Git marketplace/catalog 安装，直接从同一个 marketplace entry 重新安装插件：
+
+```bash
+codex plugin remove memforge
+codex plugin add memforge@memforge-codex-marketplace
+```
+
+如果是 Codex 本地 checkout marketplace 安装，先刷新 checkout、重新打包，再重装：
+
+```bash
+cd /path/to/memforge
+git pull
+make package-plugins
+codex plugin remove memforge
+codex plugin marketplace add "$PWD"
+codex plugin add memforge@memforge-codex-marketplace
+```
+
+如果是 Claude Code 本地 checkout marketplace 安装，刷新 checkout、重新打包、重装后 reload plugins：
+
+```bash
+cd /path/to/memforge
+git pull
+make package-plugins
+claude plugin marketplace add "$PWD"
+claude plugin install memforge@memforge-marketplace
+```
+
+然后在 Claude Code 内执行：
+
+```txt
+/reload-plugins
+```
+
+如果是直接 MCP 注册，则更新 `PATH` 上的 CLI binary：
+
+```bash
+MEMFORGE_VERSION=latest \
+  curl -fsSL https://raw.githubusercontent.com/MagnumGOYB/memforge/main/scripts/install.sh | bash
+```
+
 ### 3. CLI 安装
 
 使用 curl 安装最新 release binary：

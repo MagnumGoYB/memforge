@@ -105,6 +105,51 @@ This installs the packaged bundle from `dist/plugins/codex/memforge`; it should 
 
 See `docs/plugin-distribution.md` for detailed Claude Code and Codex distribution information.
 
+### Manual plugin updates
+
+Bundled plugin installs carry their own `memforge` runtime. Updating a separately installed CLI does not update an already installed plugin package.
+
+For a Codex Git marketplace/catalog install, reinstall the plugin from the same marketplace entry:
+
+```bash
+codex plugin remove memforge
+codex plugin add memforge@memforge-codex-marketplace
+```
+
+For a Codex local checkout marketplace install, refresh the checkout, rebuild the packaged bundle, and reinstall:
+
+```bash
+cd /path/to/memforge
+git pull
+make package-plugins
+codex plugin remove memforge
+codex plugin marketplace add "$PWD"
+codex plugin add memforge@memforge-codex-marketplace
+```
+
+For a Claude Code local checkout marketplace install, refresh the checkout, rebuild the packaged bundle, reinstall, and reload plugins:
+
+```bash
+cd /path/to/memforge
+git pull
+make package-plugins
+claude plugin marketplace add "$PWD"
+claude plugin install memforge@memforge-marketplace
+```
+
+Then run in Claude Code:
+
+```txt
+/reload-plugins
+```
+
+For direct MCP registration, update the CLI binary on `PATH` instead:
+
+```bash
+MEMFORGE_VERSION=latest \
+  curl -fsSL https://raw.githubusercontent.com/MagnumGOYB/memforge/main/scripts/install.sh | bash
+```
+
 ### 3. CLI install
 
 Install the latest release binary with curl:
