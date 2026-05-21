@@ -1,7 +1,7 @@
 {
   "name": "memforge",
   "description": "MemForge local-first project memory tools for Claude Code.",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "author": {
     "name": "MagnumGOYB"
   },
