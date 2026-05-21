@@ -93,6 +93,20 @@ server 通过 stdin/stdout 使用 newline-delimited JSON-RPC。
 
 enabled Claude Code 与 Codex plugin 可以在 active thread 中由 agent 判断是否调用该工具创建或修订稳定 project memory。该工具仍受 MCP tool approval 与本地存储规则约束：不会自动扫描源代码文件，也不会调用远程 provider。
 
+### `check_update`
+
+输入 schema：
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {}
+}
+```
+
+检查最新发布的 MemForge release，并返回 `current`、`latest`、`has_update` 和 `update_url`。该工具需要显式调用；除非设置了 `MEMFORGE_VERSION_CHECK_LATEST` 或已有缓存的 release metadata，否则可能发起一次 GitHub release metadata 请求。
+
 ### `list_constraints`
 
 输入 schema：

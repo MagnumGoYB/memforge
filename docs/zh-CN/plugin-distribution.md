@@ -48,6 +48,8 @@ claude plugin install memforge@memforge-marketplace
 
 Launcher 会解析当前平台，选择 bundled runtime，并从该 runtime 启动 stdio MCP server。它会在设置了 `MEMFORGE_PROJECT_ROOT` 时把该值作为项目根目录传给 runtime；否则在继承到的绝对路径 `PWD` 不是插件根目录时使用该 `PWD`。这样 project memories 会绑定到用户仓库，而不是插件 cache 目录。
 
+启动时，bundled launcher 会用很短的 timeout 检查最新 release；如果发现有新版 MemForge plugin package，只向 stderr 写提示。它不会把更新提示写到 stdout，因此 MCP JSON-RPC 输出仍保持机器可读。设置 `MEMFORGE_NO_VERSION_CHECK=1` 可以关闭该提示。用户询问插件是否最新时，agent 也可以显式调用 `check_update` MCP tool。
+
 ### 本地开发 smoke
 
 从 source checkout 开发时，仍然可以直接在本仓库 smoke 插件：
