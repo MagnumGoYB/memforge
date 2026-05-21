@@ -94,7 +94,22 @@ codex plugin add memforge@memforge-codex-marketplace
 
 ### 3. CLI 安装
 
-要求：
+使用 curl 安装最新 release binary：
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/MagnumGOYB/memforge/main/scripts/install.sh | bash
+```
+
+脚本默认安装到 `$HOME/.local/bin`。需要时可以覆盖安装目录或版本：
+
+```bash
+MEMFORGE_INSTALL_DIR="$HOME/bin" MEMFORGE_VERSION="latest" \
+  curl -fsSL https://raw.githubusercontent.com/MagnumGOYB/memforge/main/scripts/install.sh | bash
+```
+
+curl 安装脚本支持 macOS 与 Linux 的 arm64/amd64。Windows 用户请手动下载 release asset，或使用下面的 Go install 路径。
+
+Go install 要求：
 
 - Go 1.26.3 或更新版本
 

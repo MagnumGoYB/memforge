@@ -247,6 +247,48 @@ func TestPluginPackagingAutomationIsPresent(t *testing.T) {
 	}
 }
 
+func TestCurlInstallPathIsDocumentedAndGuarded(t *testing.T) {
+	scriptPath := filepath.Join(repoRoot(t), "scripts", "install.sh")
+	info, err := os.Stat(scriptPath)
+	if err != nil {
+		t.Fatalf("curl install script must exist: %v", err)
+	}
+	if info.Mode()&0o111 == 0 {
+		t.Fatalf("curl install script must be executable: mode %v", info.Mode())
+	}
+
+	script := read(t, "scripts", "install.sh")
+	for _, expected := range []string{
+		"set -euo pipefail",
+		"MEMFORGE_VERSION",
+		"MEMFORGE_INSTALL_DIR",
+		"https://api.github.com/repos/MagnumGOYB/memforge/releases/latest",
+		"browser_download_url",
+		"memforge-darwin-arm64",
+		"memforge-darwin-amd64",
+		"memforge-linux-arm64",
+		"memforge-linux-amd64",
+		"install -m 0755",
+	} {
+		if !strings.Contains(script, expected) {
+			t.Fatalf("curl install script must contain %q", expected)
+		}
+	}
+
+	for _, path := range []string{"README.md", "README.zh-CN.md"} {
+		doc := read(t, path)
+		for _, expected := range []string{
+			"curl -fsSL https://raw.githubusercontent.com/MagnumGOYB/memforge/main/scripts/install.sh | bash",
+			"MEMFORGE_INSTALL_DIR",
+			"MEMFORGE_VERSION",
+		} {
+			if !strings.Contains(doc, expected) {
+				t.Fatalf("%s must document curl install path with %q", path, expected)
+			}
+		}
+	}
+}
+
 func mustReadJSON(t *testing.T, path string, out any) {
 	t.Helper()
 	if err := json.Unmarshal([]byte(read(t, path)), out); err != nil {

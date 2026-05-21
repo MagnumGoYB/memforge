@@ -106,6 +106,23 @@ codex mcp add memforge -- memforge --no-version-check mcp
 
 GitHub release workflow 会构建多平台 `memforge` binaries，运行仓库与 harness 校验，用 `tools/package_plugins.sh` 打包 MemForge Claude Code 和 Codex plugin zips，通过 Node launcher smoke bundled Claude runtime，并把 standalone binaries 与 plugin zip assets 上传到 release。
 
+## Standalone CLI 安装
+
+需要独立 `memforge` CLI 的用户，可以用 curl 安装最新 release binary：
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/MagnumGOYB/memforge/main/scripts/install.sh | bash
+```
+
+安装脚本支持 `MEMFORGE_INSTALL_DIR` 与 `MEMFORGE_VERSION`：
+
+```bash
+MEMFORGE_INSTALL_DIR="$HOME/bin" MEMFORGE_VERSION="latest" \
+  curl -fsSL https://raw.githubusercontent.com/MagnumGOYB/memforge/main/scripts/install.sh | bash
+```
+
+这个 standalone CLI 安装适合直接注册 MCP 或 shell 使用。它不是 Claude Code 或 Codex marketplace/release plugin 安装的前置条件，因为打包插件会使用 bundled runtime binaries。
+
 ## 真实 smoke 目标
 
 仓库校验会检查 plugin manifests、launcher 配置、打包和 release workflow 结构。运行时 smoke 应验证：

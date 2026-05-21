@@ -106,6 +106,23 @@ Direct `codex mcp add` avoids carrying an extra local marketplace entry, but it 
 
 The GitHub release workflow builds multi-platform `memforge` binaries, runs repository and harness validation, packages the MemForge Claude Code and Codex plugin zips with `tools/package_plugins.sh`, smokes the bundled Claude runtime through the Node launcher, and uploads both standalone binaries and plugin zip assets to the release.
 
+## Standalone CLI install
+
+Users who want the standalone `memforge` CLI can install the latest release binary with curl:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/MagnumGOYB/memforge/main/scripts/install.sh | bash
+```
+
+The installer supports `MEMFORGE_INSTALL_DIR` and `MEMFORGE_VERSION`:
+
+```bash
+MEMFORGE_INSTALL_DIR="$HOME/bin" MEMFORGE_VERSION="latest" \
+  curl -fsSL https://raw.githubusercontent.com/MagnumGOYB/memforge/main/scripts/install.sh | bash
+```
+
+This standalone CLI install is useful for direct MCP registration and shell usage. It is not a prerequisite for Claude Code or Codex marketplace/release plugin installs, because packaged plugins use their bundled runtime binaries.
+
 ## Real smoke target
 
 Repository validation checks plugin manifests, launcher configuration, packaging, and release workflow structure. Runtime smoke should verify:

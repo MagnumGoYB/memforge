@@ -94,7 +94,22 @@ See `docs/plugin-distribution.md` for detailed Claude Code and Codex distributio
 
 ### 3. CLI install
 
-Requirements:
+Install the latest release binary with curl:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/MagnumGOYB/memforge/main/scripts/install.sh | bash
+```
+
+The script installs to `$HOME/.local/bin` by default. Override the install directory or version when needed:
+
+```bash
+MEMFORGE_INSTALL_DIR="$HOME/bin" MEMFORGE_VERSION="latest" \
+  curl -fsSL https://raw.githubusercontent.com/MagnumGOYB/memforge/main/scripts/install.sh | bash
+```
+
+The curl installer supports macOS and Linux on arm64 and amd64. For Windows, download a release asset manually or use the Go install path below.
+
+Go install requirements:
 
 - Go 1.26.3 or newer
 
