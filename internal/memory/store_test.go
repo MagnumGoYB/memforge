@@ -80,3 +80,51 @@ func TestAppendMarkdownPreservesExistingContent(t *testing.T) {
 		t.Fatalf("existing content lost: %s", string(data))
 	}
 }
+
+func TestRewriteKindMarkdownKeepsOriginalFileWhenReplacementFails(t *testing.T) {
+	memoriesDir := filepath.Join(t.TempDir(), "memories")
+	if err := EnsureLayout(memoriesDir); err != nil {
+		t.Fatal(err)
+	}
+	path := filepath.Join(memoriesDir, "decisions.md")
+	original := []byte("existing decision\n")
+	if err := os.WriteFile(path, original, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	record, err := NewRecord(NewRecordInput{ProjectID: "project-1", Kind: KindDecision, Title: "CLI framework", Content: "Body", Confidence: 1})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Chmod(memoriesDir, 0o500); err != nil {
+		t.Fatal(err)
+	}
+	defer os.Chmod(memoriesDir, 0o755)
+	if _, err := RewriteKindMarkdown(memoriesDir, KindDecision, []Record{record}); err == nil {
+		t.Fatal("expected rewrite to fail when memories directory is not writable")
+	}
+	data, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(data) != string(original) {
+		t.Fatalf("original file changed after failed rewrite: %q", string(data))
+	}
+}
+
+func TestRewriteKindMarkdownRemovesTemporaryFileAfterSuccess(t *testing.T) {
+	memoriesDir := filepath.Join(t.TempDir(), "memories")
+	record, err := NewRecord(NewRecordInput{ProjectID: "project-1", Kind: KindDecision, Title: "CLI framework", Content: "Body", Confidence: 1})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := RewriteKindMarkdown(memoriesDir, KindDecision, []Record{record}); err != nil {
+		t.Fatal(err)
+	}
+	matches, err := filepath.Glob(filepath.Join(memoriesDir, "*.tmp"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(matches) != 0 {
+		t.Fatalf("temporary files were not cleaned up: %v", matches)
+	}
+}

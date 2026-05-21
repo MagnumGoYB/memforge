@@ -196,11 +196,7 @@ func handleMCPUpsert(paths resolvedPaths, proj project.Project) mcp.Handler {
 			return nil, err
 		}
 		defer db.Close()
-		indexRecords, err := loadIndexRecords(paths.MemoriesDir, proj.ID)
-		if err != nil {
-			return nil, err
-		}
-		if _, err := index.RebuildMemories(ctx, db, indexRecords); err != nil {
+		if err := index.UpsertMemory(ctx, db, indexRecord(record)); err != nil {
 			return nil, err
 		}
 		return map[string]any{"action": action, "id": record.ID, "kind": record.Kind, "title": record.Title}, nil

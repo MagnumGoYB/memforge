@@ -1,6 +1,7 @@
 package memory
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -43,13 +44,42 @@ func RewriteKindMarkdown(memoriesDir string, kind Kind, records []Record) (Appen
 	for _, record := range records {
 		builder.WriteString(RenderMarkdownBlock(record))
 	}
-	file, err := os.OpenFile(path, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0o644)
+	file, err := os.CreateTemp(memoriesDir, fileName+".*.tmp")
 	if err != nil {
 		return AppendResult{}, err
 	}
-	defer file.Close()
+	tempPath := file.Name()
+	closed := false
+	defer func() {
+		if !closed {
+			_ = file.Close()
+		}
+		_ = os.Remove(tempPath)
+	}()
 	if _, err := file.WriteString(builder.String()); err != nil {
 		return AppendResult{}, err
 	}
-	return AppendResult{Path: path}, file.Sync()
+	if err := file.Sync(); err != nil {
+		return AppendResult{}, err
+	}
+	if err := file.Close(); err != nil {
+		return AppendResult{}, err
+	}
+	closed = true
+	if err := os.Rename(tempPath, path); err != nil {
+		return AppendResult{}, err
+	}
+	if err := syncDir(memoriesDir); err != nil {
+		return AppendResult{}, fmt.Errorf("sync directory: %w", err)
+	}
+	return AppendResult{Path: path}, nil
+}
+
+func syncDir(path string) error {
+	dir, err := os.Open(path)
+	if err != nil {
+		return err
+	}
+	defer dir.Close()
+	return dir.Sync()
 }

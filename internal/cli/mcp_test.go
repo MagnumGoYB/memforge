@@ -2,11 +2,15 @@ package cli
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
+
+	"github.com/MagnumGOYB/memforge/internal/index"
 )
 
 func TestExecuteMCPListsTools(t *testing.T) {
@@ -172,6 +176,52 @@ func TestExecuteMCPUpsertProjectMemoryPreservesOtherKindRecords(t *testing.T) {
 	text := string(data)
 	if !strings.Contains(text, "Other decision") || !strings.Contains(text, "Updated decision") {
 		t.Fatalf("upsert should preserve existing kind records: %s", text)
+	}
+}
+
+func TestExecuteMCPUpsertProjectMemoryDoesNotRebuildUnrelatedIndexRows(t *testing.T) {
+	storage := filepath.Join(t.TempDir(), "storage")
+	t.Setenv("MEMFORGE_HOME", storage)
+	projectRoot := t.TempDir()
+	input := strings.Join([]string{
+		`{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"upsert_project_memory","arguments":{"kind":"decision","title":"Updated decision","content":"Write this decision.","tags":["update"]}}}`,
+		`{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"upsert_project_memory","arguments":{"kind":"decision","title":"Updated decision","content":"Write this decision again.","tags":["update"]}}}`,
+	}, "\n") + "\n"
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	code := Execute([]string{"mcp", "--root", projectRoot}, Streams{Stdin: strings.NewReader(input), Stdout: &stdout, Stderr: &stderr})
+	if code != 0 {
+		t.Fatalf("code=%d stderr=%s", code, stderr.String())
+	}
+	matches, err := filepath.Glob(filepath.Join(storage, "projects", "*", "index.sqlite"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(matches) != 1 {
+		t.Fatalf("expected one index, got %v", matches)
+	}
+	db, err := index.Open(matches[0])
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer db.Close()
+	now := time.Date(2026, 5, 21, 10, 0, 0, 0, time.UTC)
+	if err := index.UpsertMemory(context.Background(), db, index.MemoryRecord{ID: "orphan-index-row", ProjectID: "project-orphan", Kind: "decision", Title: "Orphan index row", Content: "orphan searchable content", Confidence: 1, CreatedAt: now, UpdatedAt: now}); err != nil {
+		t.Fatal(err)
+	}
+	input = `{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"upsert_project_memory","arguments":{"kind":"decision","title":"Updated decision","content":"Write this decision after orphan insert.","tags":["update"]}}}` + "\n"
+	stdout.Reset()
+	stderr.Reset()
+	code = Execute([]string{"mcp", "--root", projectRoot}, Streams{Stdin: strings.NewReader(input), Stdout: &stdout, Stderr: &stderr})
+	if code != 0 {
+		t.Fatalf("code=%d stderr=%s", code, stderr.String())
+	}
+	var count int
+	if err := db.QueryRow(`SELECT COUNT(*) FROM memories WHERE id = ?`, "orphan-index-row").Scan(&count); err != nil {
+		t.Fatal(err)
+	}
+	if count != 1 {
+		t.Fatalf("unrelated index row was removed by upsert rebuild")
 	}
 }
 
