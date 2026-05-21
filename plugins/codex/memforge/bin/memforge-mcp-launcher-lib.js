@@ -10,6 +10,8 @@ const osMap = {
   win32: 'windows',
 };
 
+const releaseRepo = 'https://github.com/MagnumGOYB/memforge';
+
 const archMap = {
   x64: 'amd64',
   arm64: 'arm64',
@@ -37,6 +39,44 @@ function readPluginVersion(pluginRoot) {
     }
   }
   return '';
+}
+
+async function ensureRuntime({ env, pluginRoot, binaryPath, os, mappedArch, stderr, fetchImpl }) {
+  if (fs.existsSync(binaryPath)) return true;
+  const version = normalizeVersion(env.MEMFORGE_RUNTIME_VERSION || readPluginVersion(pluginRoot));
+  if (!version) {
+    stderr.write(`memforge MCP launcher: cannot download runtime because plugin version is unknown\n`);
+    return false;
+  }
+  if (typeof fetchImpl !== 'function') {
+    stderr.write(`memforge MCP launcher: bundled memforge runtime not found at ${binaryPath} and fetch is unavailable\n`);
+    return false;
+  }
+  const assetName = os === 'windows' ? `memforge-${os}-${mappedArch}.exe` : `memforge-${os}-${mappedArch}`;
+  const url = env.MEMFORGE_RUNTIME_DOWNLOAD_URL || `${releaseRepo}/releases/download/v${version}/${assetName}`;
+  stderr.write(`memforge MCP launcher: downloading MemForge runtime ${version} for ${os}-${mappedArch}\n`);
+  let response;
+  try {
+    response = await fetchImpl(url);
+  } catch (error) {
+    stderr.write(`memforge MCP launcher: failed to download runtime from ${url}: ${error.message}\n`);
+    return false;
+  }
+  if (!response.ok) {
+    stderr.write(`memforge MCP launcher: failed to download runtime from ${url}: HTTP ${response.status || 'error'}\n`);
+    return false;
+  }
+  let buffer;
+  try {
+    buffer = Buffer.from(await response.arrayBuffer());
+  } catch (error) {
+    stderr.write(`memforge MCP launcher: failed to read runtime download from ${url}: ${error.message}\n`);
+    return false;
+  }
+  fs.mkdirSync(path.dirname(binaryPath), { recursive: true });
+  fs.writeFileSync(binaryPath, buffer, { mode: os === 'windows' ? 0o644 : 0o755 });
+  if (os !== 'windows') fs.chmodSync(binaryPath, 0o755);
+  return true;
 }
 
 async function latestVersion(env) {
@@ -82,7 +122,7 @@ function resolveRuntime({ env, platform, arch, dirname }) {
       : '');
   const args = ['--no-version-check', 'mcp'];
   if (projectRoot) args.push('--root', projectRoot);
-  return { pluginRoot, binaryPath, args };
+  return { pluginRoot, binaryPath, args, os, mappedArch };
 }
 
 async function main(options = {}) {
@@ -92,12 +132,25 @@ async function main(options = {}) {
   const dirname = options.dirname || __dirname;
   const stderr = options.stderr || process.stderr;
   const spawn = options.spawn || defaultSpawn;
+  const fetchImpl = options.fetch || globalThis.fetch;
 
   let runtime;
   try {
     runtime = resolveRuntime({ env, platform, arch, dirname });
   } catch (error) {
     stderr.write(`memforge MCP launcher: ${error.message}\n`);
+    return 1;
+  }
+
+  if (!await ensureRuntime({
+    env,
+    pluginRoot: runtime.pluginRoot,
+    binaryPath: runtime.binaryPath,
+    os: runtime.os,
+    mappedArch: runtime.mappedArch,
+    stderr,
+    fetchImpl,
+  })) {
     return 1;
   }
 
@@ -126,4 +179,4 @@ async function main(options = {}) {
   });
 }
 
-module.exports = { main, maybeWarnUpdate, normalizeVersion, resolveRuntime };
+module.exports = { main, maybeWarnUpdate, normalizeVersion, resolveRuntime, ensureRuntime };

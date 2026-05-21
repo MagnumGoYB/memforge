@@ -84,7 +84,7 @@ dist/plugins/codex/memforge/.codex-plugin/plugin.json
 dist/plugins/codex/memforge/.mcp.json
 ```
 
-Git marketplace 安装使用 `plugins/codex/memforge` 下的 Codex plugin source。打包后的 Codex plugin bundle 同样包含各平台的 `memforge` runtime，并通过 MCP 配置使用 `bin/memforge-mcp-launcher.js`。当 Codex host 支持本地/私有 marketplace 或 plugin package 安装时，用户不应需要预先把 `memforge` CLI 安装到 `PATH`。
+Git marketplace 安装使用 `plugins/codex/memforge` 下的 Codex plugin source。由于 Git marketplace snapshot 不包含生成出来的 release binaries，Codex launcher 会在首次启动时从对应 GitHub release 下载当前平台 runtime，之后复用插件 cache 内的文件。打包后的 Codex plugin bundle 同样包含各平台的 `memforge` runtime，并通过 MCP 配置使用 `bin/memforge-mcp-launcher.js`。当 Codex host 支持本地/私有 marketplace 或 plugin package 安装时，用户不应需要预先把 `memforge` CLI 安装到 `PATH`。
 
 对于非 Git marketplace 安装，`check_update` 只检测新版并返回重装指引，不承诺 Codex.app 自动升级。
 

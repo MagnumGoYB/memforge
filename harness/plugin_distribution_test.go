@@ -309,6 +309,25 @@ func TestPluginLaunchersForwardProjectRoot(t *testing.T) {
 	}
 }
 
+func TestCodexGitMarketplaceLauncherCanMaterializeRuntime(t *testing.T) {
+	launcher := read(t, filepath.Join("plugins", "codex", "memforge", "bin", "memforge-mcp-launcher-lib.js"))
+	for _, expected := range []string{
+		"MEMFORGE_RUNTIME_VERSION",
+		"MEMFORGE_RUNTIME_DOWNLOAD_URL",
+		"/releases/download/v",
+		"fs.writeFileSync(binaryPath",
+	} {
+		if !strings.Contains(launcher, expected) {
+			t.Fatalf("Codex Git marketplace launcher must materialize missing runtime with %q", expected)
+		}
+	}
+
+	claudeLauncher := read(t, filepath.Join("plugins", "claude-code", "memforge", "bin", "memforge-mcp-launcher-lib.js"))
+	if strings.Contains(claudeLauncher, "MEMFORGE_RUNTIME_DOWNLOAD_URL") {
+		t.Fatal("Claude release package launcher should not download runtime at startup")
+	}
+}
+
 func TestCurlInstallPathIsDocumentedAndGuarded(t *testing.T) {
 	scriptPath := filepath.Join(repoRoot(t), "scripts", "install.sh")
 	info, err := os.Stat(scriptPath)

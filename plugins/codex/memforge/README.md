@@ -13,7 +13,7 @@ codex plugin marketplace add https://github.com/MagnumGOYB/memforge
 codex plugin add memforge@memforge-codex-marketplace
 ```
 
-Codex.app in-app upgrades are only supported for Git marketplace/catalog installs. Acceptance should prefer the Git marketplace install path so upgrade testing matches the normal user distribution path.
+Codex.app in-app upgrades are only supported for Git marketplace/catalog installs. Acceptance should prefer the Git marketplace install path so upgrade testing matches the normal user distribution path. Git marketplace snapshots do not include generated release binaries, so the launcher downloads the matching platform runtime from the GitHub release on first start and then reuses the cached file.
 
 ## Packaged plugin install fallback
 

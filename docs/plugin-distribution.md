@@ -84,7 +84,7 @@ dist/plugins/codex/memforge/.codex-plugin/plugin.json
 dist/plugins/codex/memforge/.mcp.json
 ```
 
-Git marketplace installs use the Codex plugin source under `plugins/codex/memforge`. Packaged Codex plugin bundles include the same platform-specific `memforge` runtimes and use `bin/memforge-mcp-launcher.js` through the MCP configuration. Where a Codex host supports local/private marketplace or plugin package installation, users should not need to preinstall the `memforge` CLI on `PATH`.
+Git marketplace installs use the Codex plugin source under `plugins/codex/memforge`. Because Git marketplace snapshots do not include generated release binaries, the Codex launcher downloads the matching platform runtime from the GitHub release on first start and then reuses it from the plugin cache. Packaged Codex plugin bundles include the same platform-specific `memforge` runtimes and use `bin/memforge-mcp-launcher.js` through the MCP configuration. Where a Codex host supports local/private marketplace or plugin package installation, users should not need to preinstall the `memforge` CLI on `PATH`.
 
 For non-Git marketplace installs, `check_update` only detects newer releases and returns reinstall guidance. It does not promise Codex.app automatic upgrades.
 
