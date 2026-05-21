@@ -255,13 +255,13 @@ func TestPluginPackagingAutomationIsPresent(t *testing.T) {
 
 func TestPluginLaunchersForwardProjectRoot(t *testing.T) {
 	for _, path := range []string{
-		filepath.Join("plugins", "claude-code", "memforge", "bin", "memforge-mcp-launcher.js"),
-		filepath.Join("plugins", "codex", "memforge", "bin", "memforge-mcp-launcher.js"),
+		filepath.Join("plugins", "claude-code", "memforge", "bin", "memforge-mcp-launcher-lib.js"),
+		filepath.Join("plugins", "codex", "memforge", "bin", "memforge-mcp-launcher-lib.js"),
 	} {
 		launcher := read(t, path)
 		for _, expected := range []string{
 			"MEMFORGE_PROJECT_ROOT",
-			"process.env.PWD",
+			"env.PWD",
 			"args.push('--root', projectRoot)",
 		} {
 			if !strings.Contains(launcher, expected) {
@@ -344,6 +344,12 @@ func assertClaudeMCPLauncher(t *testing.T, path string) {
 	if read(t, filepath.Join(filepath.Dir(path), "bin", "memforge-mcp-launcher.js")) == "" {
 		t.Fatalf("empty MCP launcher referenced by %s", path)
 	}
+	launcherLib := read(t, filepath.Join(filepath.Dir(path), "bin", "memforge-mcp-launcher-lib.js"))
+	for _, expected := range []string{"MEMFORGE_VERSION_CHECK_LATEST", "MEMFORGE_NO_VERSION_CHECK", "releases/tag/v"} {
+		if !strings.Contains(launcherLib, expected) {
+			t.Fatalf("launcher update notice support in %s missing %q", path, expected)
+		}
+	}
 }
 
 func assertCodexMCPLauncher(t *testing.T, path string) {
@@ -373,5 +379,11 @@ func assertCodexMCPLauncher(t *testing.T, path string) {
 	}
 	if read(t, filepath.Join(filepath.Dir(path), "bin", "memforge-mcp-launcher.js")) == "" {
 		t.Fatalf("empty MCP launcher referenced by %s", path)
+	}
+	launcherLib := read(t, filepath.Join(filepath.Dir(path), "bin", "memforge-mcp-launcher-lib.js"))
+	for _, expected := range []string{"MEMFORGE_VERSION_CHECK_LATEST", "MEMFORGE_NO_VERSION_CHECK", "releases/tag/v"} {
+		if !strings.Contains(launcherLib, expected) {
+			t.Fatalf("launcher update notice support in %s missing %q", path, expected)
+		}
 	}
 }

@@ -6,12 +6,14 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/MagnumGOYB/memforge/internal/buildinfo"
 	"github.com/MagnumGOYB/memforge/internal/compiler"
 	baseconfig "github.com/MagnumGOYB/memforge/internal/config"
 	"github.com/MagnumGOYB/memforge/internal/index"
 	"github.com/MagnumGOYB/memforge/internal/mcp"
 	"github.com/MagnumGOYB/memforge/internal/memory"
 	"github.com/MagnumGOYB/memforge/internal/project"
+	"github.com/MagnumGOYB/memforge/internal/versioncheck"
 	"github.com/spf13/cobra"
 )
 
@@ -49,6 +51,7 @@ func newProjectMCPServer(paths resolvedPaths, proj project.Project) mcp.Server {
 		{Name: "upsert_project_memory", Description: "Create or update a stable project memory by kind and title", InputSchema: objectSchema(withMCPProjectRoot(projectRootProperty, map[string]any{"kind": stringSchema(), "title": stringSchema(), "content": stringSchema(), "tags": arraySchema(stringSchema())}), []string{"kind", "title", "content"})},
 		{Name: "list_constraints", Description: "List high-priority constraint memories", InputSchema: objectSchema(withMCPProjectRoot(projectRootProperty, map[string]any{"limit": integerSchema()}), nil)},
 		{Name: "get_project_context", Description: "Compile project context, optionally conditioned on a task", InputSchema: objectSchema(withMCPProjectRoot(projectRootProperty, map[string]any{"task": stringSchema(), "budget": integerSchema()}), nil)},
+		{Name: "check_update", Description: "Check whether a newer MemForge release is available", InputSchema: objectSchema(map[string]any{}, nil)},
 	}
 	handlers := map[string]mcp.Handler{
 		"search_memory":         handleMCPSearch(paths, proj),
@@ -57,6 +60,7 @@ func newProjectMCPServer(paths resolvedPaths, proj project.Project) mcp.Server {
 		"upsert_project_memory": handleMCPUpsert(paths, proj),
 		"list_constraints":      handleMCPListConstraints(paths, proj),
 		"get_project_context":   handleMCPProjectContext(paths, proj),
+		"check_update":          handleMCPCheckUpdate(paths),
 	}
 	return mcp.Server{Tools: tools, Handlers: handlers}
 }
@@ -91,6 +95,34 @@ func resolveMCPProject(raw json.RawMessage, defaultPaths resolvedPaths, defaultP
 		return resolvedPaths{}, project.Project{}, err
 	}
 	return derivePaths(defaultPaths.StorageRoot, proj), proj, nil
+}
+
+func handleMCPCheckUpdate(paths resolvedPaths) mcp.Handler {
+	return func(ctx context.Context, raw json.RawMessage) (any, error) {
+		if len(raw) > 0 {
+			var args map[string]any
+			if err := json.Unmarshal(raw, &args); err != nil {
+				return nil, err
+			}
+		}
+		current := buildinfo.Version()
+		result, err := versioncheck.Check(ctx, paths.StorageRoot, current)
+		if err != nil {
+			return nil, err
+		}
+		payload := map[string]any{
+			"current":    result.Current,
+			"latest":     result.Latest,
+			"has_update": result.HasUpdate(),
+		}
+		if result.Latest != "" {
+			payload["update_url"] = fmt.Sprintf("https://github.com/MagnumGOYB/memforge/releases/tag/v%s", result.Latest)
+		}
+		if result.HasUpdate() {
+			payload["message"] = fmt.Sprintf("MemForge %s is available; reinstall the plugin package or rerun the standalone installer.", result.Latest)
+		}
+		return payload, nil
+	}
 }
 
 func handleMCPSearch(paths resolvedPaths, proj project.Project) mcp.Handler {

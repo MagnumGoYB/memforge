@@ -25,8 +25,33 @@ func TestExecuteMCPListsTools(t *testing.T) {
 	if code != 0 {
 		t.Fatalf("code=%d stderr=%s", code, stderr.String())
 	}
-	if !strings.Contains(stdout.String(), "search_memory") || !strings.Contains(stdout.String(), "get_project_context") {
+	if !strings.Contains(stdout.String(), "search_memory") || !strings.Contains(stdout.String(), "get_project_context") || !strings.Contains(stdout.String(), "check_update") {
 		t.Fatalf("unexpected response: %s", stdout.String())
+	}
+}
+
+func TestExecuteMCPCheckUpdateReportsLatestRelease(t *testing.T) {
+	storage := filepath.Join(t.TempDir(), "storage")
+	t.Setenv("MEMFORGE_HOME", storage)
+	t.Setenv("MEMFORGE_VERSION_CHECK_LATEST", "v9.9.9")
+	projectRoot := t.TempDir()
+	input := `{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"check_update","arguments":{}}}` + "\n"
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	code := Execute([]string{"mcp", "--root", projectRoot}, Streams{Stdin: strings.NewReader(input), Stdout: &stdout, Stderr: &stderr})
+	if code != 0 {
+		t.Fatalf("code=%d stderr=%s", code, stderr.String())
+	}
+	lines := strings.Split(strings.TrimSpace(stdout.String()), "\n")
+	if len(lines) != 1 {
+		t.Fatalf("unexpected responses: %s", stdout.String())
+	}
+	payload := decodeMCPTextPayload(t, lines[0])
+	if payload["latest"] != "9.9.9" {
+		t.Fatalf("unexpected update payload: %v", payload)
+	}
+	if payload["current"] == "" || !strings.Contains(payload["update_url"].(string), "/releases/tag/v9.9.9") {
+		t.Fatalf("missing current/update_url in payload: %v", payload)
 	}
 }
 

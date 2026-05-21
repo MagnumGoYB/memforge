@@ -48,6 +48,8 @@ The plugin MCP configuration starts the server through the bundled Node launcher
 
 The launcher resolves the current platform, selects the bundled runtime, and starts the stdio MCP server from that runtime. It forwards the project root to the runtime by using `MEMFORGE_PROJECT_ROOT` when set, otherwise an inherited absolute `PWD` when that path is not the plugin root. This keeps project memories attached to the user's repository instead of the plugin cache directory.
 
+On startup, the bundled launcher performs a low-timeout release check and writes a stderr-only notice when a newer MemForge plugin package is available. It never writes update notices to stdout, so MCP JSON-RPC output stays machine-readable. Set `MEMFORGE_NO_VERSION_CHECK=1` to disable this notice. Agents can also call the explicit `check_update` MCP tool when users ask whether their plugin is current.
+
 ### Local development smoke
 
 Source checkout developers can still smoke the plugin directly from this repository:

@@ -5,7 +5,7 @@ GOMODCACHE ?= $(MEMFORGE_CACHE_DIR)/go-mod
 COMMIT_MSG_FILE ?= .git/COMMIT_EDITMSG
 COMMIT_RANGE ?=
 
-.PHONY: setup check test test-packages test-harness vet build run validate validate-pr-body commitlint commitlint-range build-plugin-binaries package-plugins smoke-plugin-runtime
+.PHONY: setup check test test-packages test-harness test-launcher vet build run validate validate-pr-body commitlint commitlint-range build-plugin-binaries package-plugins smoke-plugin-runtime
 
 setup:
 	git config core.hooksPath .githooks
@@ -23,6 +23,9 @@ test-packages:
 
 test-harness:
 	GOCACHE=$(GOCACHE) GOMODCACHE=$(GOMODCACHE) $(GO) test ./harness
+
+test-launcher:
+	node tools/launcher-test/launcher_update_test.js
 
 vet:
 	GOCACHE=$(GOCACHE) GOMODCACHE=$(GOMODCACHE) $(GO) vet ./...
@@ -61,7 +64,8 @@ smoke-plugin-runtime:
 	rm -rf "$$smoke_root"; \
 	mkdir -p "$$smoke_root/bin/$$platform"; \
 	cp plugins/claude-code/memforge/bin/memforge-mcp-launcher.js "$$smoke_root/bin/memforge-mcp-launcher.js"; \
+	cp plugins/claude-code/memforge/bin/memforge-mcp-launcher-lib.js "$$smoke_root/bin/memforge-mcp-launcher-lib.js"; \
 	GOCACHE=$(GOCACHE) GOMODCACHE=$(GOMODCACHE) $(GO) build -trimpath -o "$$smoke_root/bin/$$platform/memforge" ./cmd/memforge; \
 	printf '%s\n' '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}' | MEMFORGE_HOME=$$(mktemp -d) MEMFORGE_PLUGIN_ROOT="$$smoke_root" node "$$smoke_root/bin/memforge-mcp-launcher.js"
 
-validate: check test build
+validate: check test test-launcher build

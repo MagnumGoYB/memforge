@@ -99,6 +99,20 @@ Creates or updates a stable project memory by `kind` and normalized `title`. It 
 
 Enabled Claude Code and Codex plugins may use this tool during an active thread when the agent determines a durable project memory should be created or revised. The tool is still bounded by MCP tool approval and local storage rules: it does not auto-scan source files and it does not call remote providers.
 
+### `check_update`
+
+Input schema:
+
+```json
+{
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {}
+}
+```
+
+Checks the latest published MemForge release and returns `current`, `latest`, `has_update`, and `update_url`. This tool is explicit and may perform a GitHub release metadata request unless `MEMFORGE_VERSION_CHECK_LATEST` or cached release metadata is available.
+
 ### `list_constraints`
 
 Input schema:
