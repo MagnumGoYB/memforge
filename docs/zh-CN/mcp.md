@@ -55,6 +55,8 @@ server 通过 stdin/stdout 使用 newline-delimited JSON-RPC。
 
 从已保存记忆编译 agent-ready markdown context。`budget` 省略或为 `0` 时，server 会使用项目配置（`.memoryrc` 或用户配置），再回退到内置默认值。
 
+返回值还会包含 `estimated_tokens` 与 `usage.estimated_tokens`，表示 MemForge 对本次编译上下文 payload 的本地 token 估算。它适合做 plugin 侧观测和 budget 调优，但不是宿主模型的完整计费记录。
+
 ### `save_memory`
 
 输入 schema：
@@ -147,3 +149,5 @@ enabled Claude Code 与 Codex plugin 可以在 active thread 中由 agent 判断
 ```
 
 `task` 为空时行为类似 `compile_context`；提供 `task` 时复用 `before` 的任务条件选择策略。`budget` 省略或为 `0` 时使用项目配置提供的默认值。
+
+与 `compile_context` 一样，返回值会包含 `estimated_tokens` 与 `usage.estimated_tokens`，表示 MemForge 对返回上下文的本地 token 估算。

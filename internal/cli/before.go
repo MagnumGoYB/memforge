@@ -62,7 +62,17 @@ func newBeforeCmd(streams Streams) *cobra.Command {
 			for _, warning := range result.Warnings {
 				_, _ = fmt.Fprintln(streams.Stderr, warning)
 			}
-			payload := map[string]any{"task": args[0], "count": len(result.Entries), "context": result.Markdown, "warnings": result.Warnings}
+			payload := map[string]any{
+				"task":             args[0],
+				"budget":           resolvedBudget,
+				"count":            len(result.Entries),
+				"context":          result.Markdown,
+				"warnings":         result.Warnings,
+				"estimated_tokens": result.EstimatedTokens,
+				"usage": map[string]any{
+					"estimated_tokens": result.EstimatedTokens,
+				},
+			}
 			if settings.Format == baseconfig.FormatJSON {
 				return internalError(writeJSON(streams.Stdout, payload))
 			}

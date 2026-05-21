@@ -258,6 +258,7 @@ Rules:
 - JSON payloads belong on stdout.
 - Human-readable warnings belong on stderr.
 - `--no-version-check` is part of the automation contract.
+- `context`, `before`, `compile_context`, and `get_project_context` JSON responses include `estimated_tokens` plus `usage.estimated_tokens` for MemForge's local context-size estimate.
 
 ## Local-first and privacy boundaries
 

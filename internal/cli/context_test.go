@@ -28,15 +28,19 @@ func TestExecuteContextJSON(t *testing.T) {
 		t.Fatalf("code=%d stderr=%s", code, stderr.String())
 	}
 	var payload struct {
-		Count    int      `json:"count"`
-		Context  string   `json:"context"`
-		Warnings []string `json:"warnings"`
+		Count           int      `json:"count"`
+		Context         string   `json:"context"`
+		Warnings        []string `json:"warnings"`
+		EstimatedTokens int      `json:"estimated_tokens"`
 	}
 	if err := json.Unmarshal(stdout.Bytes(), &payload); err != nil {
 		t.Fatal(err)
 	}
 	if payload.Count == 0 || payload.Context == "" {
 		t.Fatalf("unexpected payload: %#v", payload)
+	}
+	if payload.EstimatedTokens <= 0 {
+		t.Fatalf("unexpected estimated tokens: %#v", payload)
 	}
 }
 

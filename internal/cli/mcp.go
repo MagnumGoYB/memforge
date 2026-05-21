@@ -187,7 +187,16 @@ func handleMCPCompile(paths resolvedPaths, proj project.Project) mcp.Handler {
 			return nil, err
 		}
 		result := compiler.CompileContext(compiler.CompileInput{Memories: records, Budget: budget, Kinds: kinds, KindWeights: kindWeights})
-		return map[string]any{"budget": budget, "count": len(result.Entries), "context": result.Markdown, "warnings": result.Warnings}, nil
+		return map[string]any{
+			"budget":           budget,
+			"count":            len(result.Entries),
+			"context":          result.Markdown,
+			"warnings":         result.Warnings,
+			"estimated_tokens": result.EstimatedTokens,
+			"usage": map[string]any{
+				"estimated_tokens": result.EstimatedTokens,
+			},
+		}, nil
 	}
 }
 
@@ -378,7 +387,17 @@ func handleMCPProjectContext(paths resolvedPaths, proj project.Project) mcp.Hand
 			selected = selectBeforeRecords(records, matches, args.Task)
 		}
 		result := compiler.CompileContext(compiler.CompileInput{Memories: selected, Budget: budget, Heading: heading, KindWeights: kindWeights})
-		return map[string]any{"task": args.Task, "budget": budget, "count": len(result.Entries), "context": result.Markdown, "warnings": result.Warnings}, nil
+		return map[string]any{
+			"task":             args.Task,
+			"budget":           budget,
+			"count":            len(result.Entries),
+			"context":          result.Markdown,
+			"warnings":         result.Warnings,
+			"estimated_tokens": result.EstimatedTokens,
+			"usage": map[string]any{
+				"estimated_tokens": result.EstimatedTokens,
+			},
+		}, nil
 	}
 }
 

@@ -27,9 +27,10 @@ func TestExecuteBeforeJSON(t *testing.T) {
 		t.Fatalf("code=%d stderr=%s", code, stderr.String())
 	}
 	var payload struct {
-		Task    string `json:"task"`
-		Count   int    `json:"count"`
-		Context string `json:"context"`
+		Task            string `json:"task"`
+		Count           int    `json:"count"`
+		Context         string `json:"context"`
+		EstimatedTokens int    `json:"estimated_tokens"`
 	}
 	if err := json.Unmarshal(stdout.Bytes(), &payload); err != nil {
 		t.Fatal(err)
@@ -39,5 +40,8 @@ func TestExecuteBeforeJSON(t *testing.T) {
 	}
 	if !strings.Contains(payload.Context, "# Refactor auth middleware") {
 		t.Fatalf("unexpected context: %s", payload.Context)
+	}
+	if payload.EstimatedTokens <= 0 {
+		t.Fatalf("unexpected estimated tokens: %#v", payload)
 	}
 }

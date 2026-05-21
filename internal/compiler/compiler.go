@@ -25,9 +25,10 @@ type Entry struct {
 }
 
 type CompileResult struct {
-	Markdown string
-	Entries  []Entry
-	Warnings []string
+	Markdown        string
+	Entries         []Entry
+	Warnings        []string
+	EstimatedTokens int
 }
 
 func CompileContext(input CompileInput) CompileResult {
@@ -67,7 +68,12 @@ func CompileContext(input CompileInput) CompileResult {
 	if strings.TrimSpace(heading) == "" {
 		heading = "Project Context"
 	}
-	return CompileResult{Markdown: renderContext(heading, selected), Entries: selected, Warnings: warnings}
+	return CompileResult{
+		Markdown:        renderContext(heading, selected),
+		Entries:         selected,
+		Warnings:        warnings,
+		EstimatedTokens: sumEntryTokens(selected),
+	}
 }
 
 func allocateBudget(entries []Entry, budget int, kindWeights map[memory.Kind]int) []Entry {
@@ -223,4 +229,12 @@ func appendIfMissing(items []string, value string) []string {
 		}
 	}
 	return append(items, value)
+}
+
+func sumEntryTokens(entries []Entry) int {
+	total := 0
+	for _, entry := range entries {
+		total += entry.Tokens
+	}
+	return total
 }

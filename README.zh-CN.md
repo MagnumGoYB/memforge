@@ -258,6 +258,7 @@ memforge --no-version-check <command> --format json
 - JSON payload 只写 stdout。
 - 人类可读 warning 写 stderr。
 - `--no-version-check` 是自动化契约的一部分。
+- `context`、`before`、`compile_context` 与 `get_project_context` 的 JSON 返回会包含 `estimated_tokens` 与 `usage.estimated_tokens`，用于表示 MemForge 对上下文大小的本地估算。
 
 ## 本地优先与隐私边界
 

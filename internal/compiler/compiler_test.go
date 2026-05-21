@@ -51,3 +51,20 @@ func TestCompileContextUsesCustomKindWeights(t *testing.T) {
 		t.Fatalf("custom kind weights were not applied: %#v", result.Entries)
 	}
 }
+
+func TestCompileContextReportsEstimatedTokens(t *testing.T) {
+	result := CompileContext(CompileInput{
+		Budget: 3000,
+		Memories: []memory.Record{
+			{ID: "1", Kind: memory.KindManual, Title: "Manual", Content: "manual body", Confidence: 1, UpdatedAt: time.Now()},
+			{ID: "2", Kind: memory.KindDecision, Title: "Decision", Content: "decision body", Confidence: 1, UpdatedAt: time.Now()},
+		},
+	})
+	if len(result.Entries) != 2 {
+		t.Fatalf("expected 2 entries, got %#v", result.Entries)
+	}
+	expected := result.Entries[0].Tokens + result.Entries[1].Tokens
+	if result.EstimatedTokens != expected {
+		t.Fatalf("estimated tokens=%d, want %d", result.EstimatedTokens, expected)
+	}
+}

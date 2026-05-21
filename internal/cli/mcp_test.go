@@ -379,6 +379,43 @@ func TestExecuteMCPCompileUsesProjectDefaultBudget(t *testing.T) {
 	if got := int(payload["budget"].(float64)); got != 1400 {
 		t.Fatalf("budget=%d, want 1400: %v", got, payload)
 	}
+	if _, ok := payload["estimated_tokens"]; !ok {
+		t.Fatalf("missing estimated_tokens: %v", payload)
+	}
+	usage, ok := payload["usage"].(map[string]any)
+	if !ok {
+		t.Fatalf("missing usage payload: %v", payload)
+	}
+	if got := int(usage["estimated_tokens"].(float64)); got <= 0 {
+		t.Fatalf("usage estimated_tokens=%d, want > 0: %v", got, payload)
+	}
+}
+
+func TestExecuteMCPProjectContextReportsEstimatedTokens(t *testing.T) {
+	storage := filepath.Join(t.TempDir(), "storage")
+	t.Setenv("MEMFORGE_HOME", storage)
+	projectRoot := t.TempDir()
+	input := strings.Join([]string{
+		`{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"save_memory","arguments":{"kind":"manual","title":"Manual note","content":"manual note body"}}}`,
+		`{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"get_project_context","arguments":{"task":"debug memory usage","budget":400}}}`,
+	}, "\n") + "\n"
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	code := Execute([]string{"mcp", "--root", projectRoot}, Streams{Stdin: strings.NewReader(input), Stdout: &stdout, Stderr: &stderr})
+	if code != 0 {
+		t.Fatalf("code=%d stderr=%s", code, stderr.String())
+	}
+	lines := strings.Split(strings.TrimSpace(stdout.String()), "\n")
+	if len(lines) != 2 {
+		t.Fatalf("unexpected responses: %s", stdout.String())
+	}
+	payload := decodeMCPTextPayload(t, lines[1])
+	if got := int(payload["budget"].(float64)); got != 400 {
+		t.Fatalf("budget=%d, want 400: %v", got, payload)
+	}
+	if got := int(payload["estimated_tokens"].(float64)); got <= 0 {
+		t.Fatalf("estimated_tokens=%d, want > 0: %v", got, payload)
+	}
 }
 
 func decodeMCPTextPayload(t *testing.T, line string) map[string]any {

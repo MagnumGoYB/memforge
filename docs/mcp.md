@@ -55,6 +55,8 @@ Input schema:
 
 Returns agent-ready markdown context compiled from stored memories. When `budget` is omitted or `0`, the server uses project configuration (`.memoryrc` or user config) and then the built-in default.
 
+The response also includes `estimated_tokens` and `usage.estimated_tokens`, which report MemForge's local estimate for the compiled context payload. This is useful for plugin-side observability and budget tuning, but it is not a full host-model billing record.
+
 ### `save_memory`
 
 Input schema:
@@ -147,3 +149,5 @@ Input schema:
 ```
 
 When `task` is empty, this behaves like `compile_context`. When `task` is present, it uses the same task-conditioned selection strategy as `before`. When `budget` is omitted or `0`, project configuration supplies the default.
+
+Like `compile_context`, the response includes `estimated_tokens` and `usage.estimated_tokens` for the compiled context returned by MemForge.
