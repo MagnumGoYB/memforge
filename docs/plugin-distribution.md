@@ -66,15 +66,27 @@ This source-checkout flow is for local development and debugging only. It is not
 
 > **Official Codex plugin store status:** OpenAI's self-serve plugin publishing is not yet available (marked "coming soon" in OpenAI docs as of May 2026). MemForge is not listed in the Codex official plugin browser (`/plugins`). When public publishing opens and MemForge is accepted, users will be able to install directly from the Codex plugin browser without any manual setup.
 
-Codex supports plugin manifests and marketplace/catalog installation flows. This repository includes a local/private distribution package:
+Codex supports plugin manifests and marketplace/catalog installation flows. Testing and user distribution should prefer a Git marketplace/catalog install:
 
-```txt
-dist/plugins/codex/memforge/.codex-plugin/plugin.json
-dist/plugins/codex/memforge/.mcp.json
-.agents/plugins/marketplace.json
+```bash
+codex plugin marketplace add https://github.com/MagnumGOYB/memforge
+codex plugin add memforge@memforge-codex-marketplace
 ```
 
-Packaged Codex plugin bundles include the same platform-specific `memforge` runtimes and use `bin/memforge-mcp-launcher.js` through the MCP configuration. Where a Codex host supports local/private marketplace or plugin package installation, users should not need to preinstall the `memforge` CLI on `PATH`.
+Codex.app in-app upgrades are only supported for Git marketplace/catalog installs. Acceptance should prefer the Git marketplace install path so update behavior matches the user-facing distribution model.
+
+This repository includes both the Git marketplace entry and a packaged fallback:
+
+```txt
+marketplaces/codex/marketplace.json
+.agents/plugins/marketplace.json
+dist/plugins/codex/memforge/.codex-plugin/plugin.json
+dist/plugins/codex/memforge/.mcp.json
+```
+
+Git marketplace installs use the Codex plugin source under `plugins/codex/memforge`. Packaged Codex plugin bundles include the same platform-specific `memforge` runtimes and use `bin/memforge-mcp-launcher.js` through the MCP configuration. Where a Codex host supports local/private marketplace or plugin package installation, users should not need to preinstall the `memforge` CLI on `PATH`.
+
+For non-Git marketplace installs, `check_update` only detects newer releases and returns reinstall guidance. It does not promise Codex.app automatic upgrades.
 
 The Codex MCP configuration uses a plugin-root-relative launcher path and `cwd: "."` so the host starts the bundled launcher from the plugin package. Agents must pass the current repository path through the MCP `project_root` argument on tool calls; the long-running plugin server process working directory is not a reliable project root. The Codex configuration must not rely on Claude Code-specific environment variables:
 
@@ -87,7 +99,7 @@ The Codex MCP configuration uses a plugin-root-relative launcher path and `cwd: 
 }
 ```
 
-Codex CLI 0.132 exposes marketplace management and plugin install/remove commands. The `memforge-codex-marketplace` entry points at the packaged bundle under `dist/plugins/codex/memforge`, so run `make package-plugins` before adding or refreshing the marketplace from a source checkout:
+Codex CLI 0.132 exposes marketplace management and plugin install/remove commands. For local package smoke, run `make package-plugins` before installing the packaged fallback from a source checkout:
 
 ```bash
 make package-plugins

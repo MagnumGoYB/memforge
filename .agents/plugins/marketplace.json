@@ -5,8 +5,10 @@
     {
       "name": "memforge",
       "source": {
-        "source": "local",
-        "path": "./dist/plugins/codex/memforge"
+        "source": "github",
+        "repo": "MagnumGOYB/memforge",
+        "path": "plugins/codex/memforge",
+        "ref": "main"
       }
     }
   ]

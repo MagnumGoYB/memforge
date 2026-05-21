@@ -111,15 +111,19 @@ func handleMCPCheckUpdate(paths resolvedPaths) mcp.Handler {
 			return nil, err
 		}
 		payload := map[string]any{
-			"current":    result.Current,
-			"latest":     result.Latest,
-			"has_update": result.HasUpdate(),
+			"current":                         result.Current,
+			"latest":                          result.Latest,
+			"has_update":                      result.HasUpdate(),
+			"preferred_install_channel":       "codex_git_marketplace",
+			"codex_app_auto_update_supported": true,
+			"non_git_marketplace_action":      "reinstall_plugin_package",
+			"update_guidance":                 "Codex.app automatic upgrades are supported for Git marketplace installs; non-Git marketplace or direct MCP installs should reinstall the plugin package.",
 		}
 		if result.Latest != "" {
 			payload["update_url"] = fmt.Sprintf("https://github.com/MagnumGOYB/memforge/releases/tag/v%s", result.Latest)
 		}
 		if result.HasUpdate() {
-			payload["message"] = fmt.Sprintf("MemForge %s is available; reinstall the plugin package or rerun the standalone installer.", result.Latest)
+			payload["message"] = fmt.Sprintf("MemForge %s is available. Codex.app automatic upgrades are supported for Git marketplace installs; non-Git marketplace or direct MCP installs should reinstall the plugin package or rerun the standalone installer.", result.Latest)
 		}
 		return payload, nil
 	}

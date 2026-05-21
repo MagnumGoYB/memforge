@@ -64,7 +64,7 @@ async function maybeWarnUpdate({ env, pluginRoot, stderr }) {
   const current = readPluginVersion(pluginRoot);
   const latest = await latestVersion(env);
   if (!current || !latest || current === latest) return;
-  stderr.write(`MemForge ${latest} is available (current ${current}). Reinstall the plugin package and reload plugins: https://github.com/MagnumGOYB/memforge/releases/tag/v${latest}\n`);
+  stderr.write(`MemForge ${latest} is available (current ${current}). Codex.app can auto-upgrade Git marketplace installs; otherwise reinstall the plugin package and reload plugins: https://github.com/MagnumGOYB/memforge/releases/tag/v${latest}\n`);
 }
 
 function resolveRuntime({ env, platform, arch, dirname }) {

@@ -64,13 +64,26 @@ MemForge 是一个面向 AI coding workflow 的本地项目上下文编译器。
 
 > **Codex 官方插件商店状态：** OpenAI 的自助插件发布尚未开放（截至 2026 年 5 月，OpenAI 文档标注为 "coming soon"）。MemForge 目前未出现在 Codex 官方插件浏览器（`/plugins`）中。当公开发布通道开放且 MemForge 被收录后，用户可直接从 Codex 插件浏览器安装。
 
-在此之前，请使用以下路径之一。
+在此之前，测试验收和对外分发应优先使用 Git marketplace/catalog。Codex.app 内升级只支持 Git marketplace/catalog 安装。验收优先走 Git marketplace 安装路径，才能覆盖真实用户的自动升级行为。
 
-**A. 本地/私有 marketplace 或 Codex host 插件包**
+**A. Git marketplace/catalog（验收与升级优先路径）**
+
+仓库提供 Codex marketplace entry：`.agents/plugins/marketplace.json` 与 `marketplaces/codex/marketplace.json`。可以从仓库 URL 添加 Git marketplace/catalog，或从指向 Git-backed entry 的 checkout 添加：
+
+```bash
+codex plugin marketplace add https://github.com/MagnumGOYB/memforge
+codex plugin add memforge@memforge-codex-marketplace
+```
+
+这是推荐验收路径，因为 Codex.app 可以基于 Git marketplace/catalog source 做应用内升级。
+
+**B. 本地/私有 marketplace 或 Codex host 插件包**
 
 当 Codex host 支持本地/私有 marketplace 或 plugin package 安装时，通过该 host 安装打包后的 `dist/plugins/codex/memforge` bundle。打包 bundle 包含各平台的 `memforge` runtime，并通过 `bin/memforge-mcp-launcher.js` 启动；用户不应需要预先安装 CLI。
 
-**B. 直接 MCP 注册（推荐 CLI fallback）**
+对于非 Git marketplace 安装，`check_update` MCP tool 只负责检测新版并返回重装指引，不承诺 Codex.app 自动升级。
+
+**C. 直接 MCP 注册（推荐 CLI fallback）**
 
 ```bash
 go install github.com/MagnumGOYB/memforge/cmd/memforge@latest
@@ -79,7 +92,7 @@ codex mcp add memforge -- memforge --no-version-check mcp
 
 这使用 `PATH` 上的 `memforge` binary，不是 packaged plugin runtime path。
 
-**C. 本地 marketplace discovery（仅开发/调试）**
+**D. 本地 marketplace discovery（仅开发/调试）**
 
 Codex CLI 0.132 暴露 marketplace 管理和 plugin install/remove 命令。在运行 `make package-plugins` 后，从打包 checkout：
 

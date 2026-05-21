@@ -64,13 +64,26 @@ The release plugin package includes platform-specific `memforge` runtime binarie
 
 > **Official Codex plugin store status:** OpenAI's self-serve plugin publishing is not yet available (marked "coming soon" in OpenAI docs as of May 2026). MemForge is not listed in the Codex official plugin browser (`/plugins`). When public publishing opens and MemForge is accepted, users will be able to install directly from the Codex plugin browser.
 
-Until then, use one of the paths below.
+Until then, prefer a Git marketplace/catalog when testing or distributing Codex installs. Codex.app in-app upgrades are only supported for Git marketplace/catalog installs. Acceptance should prefer the Git marketplace install path so update behavior matches the user-facing distribution model.
 
-**A. Local/private marketplace or Codex host plugin package**
+**A. Git marketplace/catalog (preferred for acceptance and updates)**
+
+The repository ships a Codex marketplace entry at `.agents/plugins/marketplace.json` and `marketplaces/codex/marketplace.json`. Add the Git marketplace/catalog from the repository URL or from a checkout that points Codex at the Git-backed entry:
+
+```bash
+codex plugin marketplace add https://github.com/MagnumGOYB/memforge
+codex plugin add memforge@memforge-codex-marketplace
+```
+
+This is the preferred acceptance path because Codex.app can use the Git marketplace/catalog source for in-app upgrades.
+
+**B. Local/private marketplace or Codex host plugin package**
 
 When your Codex host supports local/private marketplace or plugin package installation, install the packaged `dist/plugins/codex/memforge` bundle through that host. The packaged bundle includes platform-specific `memforge` runtime binaries and uses `bin/memforge-mcp-launcher.js`; users should not need to preinstall the CLI.
 
-**B. Direct MCP registration (recommended CLI fallback)**
+For non-Git marketplace installs, the `check_update` MCP tool only detects newer releases and returns reinstall guidance. It does not promise Codex.app automatic upgrades.
+
+**C. Direct MCP registration (recommended CLI fallback)**
 
 ```bash
 go install github.com/MagnumGOYB/memforge/cmd/memforge@latest
@@ -79,7 +92,7 @@ codex mcp add memforge -- memforge --no-version-check mcp
 
 This uses a `memforge` binary on `PATH` and is not the packaged plugin runtime path.
 
-**C. Local marketplace discovery (development/debugging only)**
+**D. Local marketplace discovery (development/debugging only)**
 
 Codex CLI 0.132 exposes marketplace management and plugin install/remove commands. From a packaged checkout after `make package-plugins`:
 

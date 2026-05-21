@@ -66,15 +66,27 @@ claude --plugin-dir ./plugins/claude-code/memforge
 
 > **Codex 官方插件商店状态：** OpenAI 的自助插件发布尚未开放（截至 2026 年 5 月，OpenAI 文档标注为 "coming soon"）。MemForge 目前未出现在 Codex 官方插件浏览器（`/plugins`）中。当公开发布通道开放且 MemForge 被收录后，用户可直接从 Codex 插件浏览器安装，无需任何手动配置。
 
-Codex 支持 plugin manifest 与 marketplace/catalog 安装流程。本仓库提供本地/私有分发包：
+Codex 支持 plugin manifest 与 marketplace/catalog 安装流程。测试验收与用户分发应优先使用 Git marketplace/catalog 安装：
 
-```txt
-dist/plugins/codex/memforge/.codex-plugin/plugin.json
-dist/plugins/codex/memforge/.mcp.json
-.agents/plugins/marketplace.json
+```bash
+codex plugin marketplace add https://github.com/MagnumGOYB/memforge
+codex plugin add memforge@memforge-codex-marketplace
 ```
 
-打包后的 Codex plugin bundle 同样包含各平台的 `memforge` runtime，并通过 MCP 配置使用 `bin/memforge-mcp-launcher.js`。当 Codex host 支持本地/私有 marketplace 或 plugin package 安装时，用户不应需要预先把 `memforge` CLI 安装到 `PATH`。
+Codex.app 内升级只支持 Git marketplace/catalog 安装。验收优先走 Git marketplace 安装路径，才能覆盖真实用户的升级行为。
+
+本仓库同时提供 Git marketplace entry 与 packaged fallback：
+
+```txt
+marketplaces/codex/marketplace.json
+.agents/plugins/marketplace.json
+dist/plugins/codex/memforge/.codex-plugin/plugin.json
+dist/plugins/codex/memforge/.mcp.json
+```
+
+Git marketplace 安装使用 `plugins/codex/memforge` 下的 Codex plugin source。打包后的 Codex plugin bundle 同样包含各平台的 `memforge` runtime，并通过 MCP 配置使用 `bin/memforge-mcp-launcher.js`。当 Codex host 支持本地/私有 marketplace 或 plugin package 安装时，用户不应需要预先把 `memforge` CLI 安装到 `PATH`。
+
+对于非 Git marketplace 安装，`check_update` 只检测新版并返回重装指引，不承诺 Codex.app 自动升级。
 
 Codex MCP 配置使用相对插件根目录的 launcher 路径，并保留 `cwd: "."`，让 host 从插件包目录启动 bundled launcher。Agent 调用工具时必须通过 MCP `project_root` 参数传入当前仓库路径；长生命周期插件 server 进程的工作目录不能作为可靠项目根目录。Codex 配置不能依赖 Claude Code 专用环境变量：
 
@@ -87,7 +99,7 @@ Codex MCP 配置使用相对插件根目录的 launcher 路径，并保留 `cwd:
 }
 ```
 
-Codex CLI 0.132 暴露 marketplace 管理和 plugin install/remove 命令。`memforge-codex-marketplace` entry 指向 `dist/plugins/codex/memforge` 下的打包 bundle，所以从源码 checkout 添加或刷新 marketplace 前需要先运行 `make package-plugins`：
+Codex CLI 0.132 暴露 marketplace 管理和 plugin install/remove 命令。做本地 package smoke 时，从源码 checkout 安装 packaged fallback 前需要先运行 `make package-plugins`：
 
 ```bash
 make package-plugins

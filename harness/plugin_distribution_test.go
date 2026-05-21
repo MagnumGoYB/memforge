@@ -76,7 +76,9 @@ func TestCodexPluginPackageIsInstallable(t *testing.T) {
 			Name   string `json:"name"`
 			Source struct {
 				Source string `json:"source"`
+				Repo   string `json:"repo"`
 				Path   string `json:"path"`
+				Ref    string `json:"ref"`
 			} `json:"source"`
 		} `json:"plugins"`
 	}
@@ -84,7 +86,7 @@ func TestCodexPluginPackageIsInstallable(t *testing.T) {
 	if marketplace.Name == "" || marketplace.Description == "" {
 		t.Fatalf("unexpected Codex marketplace metadata: %#v", marketplace)
 	}
-	if len(marketplace.Plugins) != 1 || marketplace.Plugins[0].Name != "memforge" || marketplace.Plugins[0].Source.Source != "local" || marketplace.Plugins[0].Source.Path != "./dist/plugins/codex/memforge" {
+	if len(marketplace.Plugins) != 1 || marketplace.Plugins[0].Name != "memforge" || marketplace.Plugins[0].Source.Source != "github" || marketplace.Plugins[0].Source.Repo != "MagnumGOYB/memforge" || marketplace.Plugins[0].Source.Path != "plugins/codex/memforge" || marketplace.Plugins[0].Source.Ref == "" {
 		t.Fatalf("unexpected Codex marketplace: %#v", marketplace)
 	}
 
@@ -93,13 +95,53 @@ func TestCodexPluginPackageIsInstallable(t *testing.T) {
 			Name   string `json:"name"`
 			Source struct {
 				Source string `json:"source"`
+				Repo   string `json:"repo"`
 				Path   string `json:"path"`
+				Ref    string `json:"ref"`
 			} `json:"source"`
 		} `json:"plugins"`
 	}
 	mustReadJSON(t, filepath.Join("marketplaces", "codex", "marketplace.json"), &altMarketplace)
-	if len(altMarketplace.Plugins) != 1 || altMarketplace.Plugins[0].Name != "memforge" || altMarketplace.Plugins[0].Source.Source != "local" || altMarketplace.Plugins[0].Source.Path != "./dist/plugins/codex/memforge" {
+	if len(altMarketplace.Plugins) != 1 || altMarketplace.Plugins[0].Name != "memforge" || altMarketplace.Plugins[0].Source.Source != "github" || altMarketplace.Plugins[0].Source.Repo != "MagnumGOYB/memforge" || altMarketplace.Plugins[0].Source.Path != "plugins/codex/memforge" || altMarketplace.Plugins[0].Source.Ref == "" {
 		t.Fatalf("unexpected alternate Codex marketplace: %#v", altMarketplace)
+	}
+}
+
+func TestCodexDistributionDocsPreferGitMarketplaceAutoUpgrade(t *testing.T) {
+	cases := map[string][]string{
+		"README.md": {
+			"Git marketplace",
+			"Codex.app in-app upgrades are only supported for Git marketplace/catalog installs",
+			"Acceptance should prefer the Git marketplace install path",
+		},
+		"README.zh-CN.md": {
+			"Git marketplace",
+			"Codex.app 内升级只支持 Git marketplace/catalog 安装",
+			"验收优先走 Git marketplace 安装路径",
+		},
+		filepath.Join("plugins", "codex", "memforge", "README.md"): {
+			"Git marketplace",
+			"Codex.app in-app upgrades are only supported for Git marketplace/catalog installs",
+			"Acceptance should prefer the Git marketplace install path",
+		},
+		filepath.Join("docs", "plugin-distribution.md"): {
+			"Git marketplace",
+			"Codex.app in-app upgrades are only supported for Git marketplace/catalog installs",
+			"Acceptance should prefer the Git marketplace install path",
+		},
+		filepath.Join("docs", "zh-CN", "plugin-distribution.md"): {
+			"Git marketplace",
+			"Codex.app 内升级只支持 Git marketplace/catalog 安装",
+			"验收优先走 Git marketplace 安装路径",
+		},
+	}
+	for path, expectedSnippets := range cases {
+		doc := read(t, path)
+		for _, expected := range expectedSnippets {
+			if !strings.Contains(doc, expected) {
+				t.Fatalf("%s must document Codex Git marketplace auto-upgrade policy with %q", path, expected)
+			}
+		}
 	}
 }
 

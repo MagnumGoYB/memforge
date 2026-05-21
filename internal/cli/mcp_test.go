@@ -53,6 +53,12 @@ func TestExecuteMCPCheckUpdateReportsLatestRelease(t *testing.T) {
 	if payload["current"] == "" || !strings.Contains(payload["update_url"].(string), "/releases/tag/v9.9.9") {
 		t.Fatalf("missing current/update_url in payload: %v", payload)
 	}
+	if payload["preferred_install_channel"] != "codex_git_marketplace" || payload["codex_app_auto_update_supported"] != true {
+		t.Fatalf("missing Codex Git marketplace update policy: %v", payload)
+	}
+	if payload["non_git_marketplace_action"] != "reinstall_plugin_package" || !strings.Contains(payload["update_guidance"].(string), "Git marketplace") {
+		t.Fatalf("missing non-Git marketplace reinstall guidance: %v", payload)
+	}
 }
 
 func TestExecuteMCPSaveAndSearchMemory(t *testing.T) {
