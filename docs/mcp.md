@@ -14,6 +14,8 @@ The server speaks newline-delimited JSON-RPC over stdin/stdout.
 
 ## Tools
 
+All tools accept optional `project_root` as an absolute repository/workspace path. When omitted, the MCP server uses the project root resolved at server startup. Plugins should pass `project_root` because hosts may keep MCP server processes running from plugin cache directories.
+
 ### `search_memory`
 
 Input schema:
@@ -24,6 +26,7 @@ Input schema:
   "additionalProperties": false,
   "required": ["query"],
   "properties": {
+    "project_root": { "type": "string" },
     "query": { "type": "string" },
     "kinds": { "type": "array", "items": { "type": "string" } },
     "limit": { "type": "integer", "minimum": 0 },
@@ -41,8 +44,9 @@ Input schema:
 ```json
 {
   "type": "object",
-  "additionalProperties": false,
+	  "additionalProperties": false,
   "properties": {
+    "project_root": { "type": "string" },
     "budget": { "type": "integer", "minimum": 0 },
     "kinds": { "type": "array", "items": { "type": "string" } }
   }
@@ -61,6 +65,7 @@ Input schema:
   "additionalProperties": false,
   "required": ["kind", "title", "content"],
   "properties": {
+    "project_root": { "type": "string" },
     "kind": { "type": "string" },
     "title": { "type": "string" },
     "content": { "type": "string" },
@@ -81,6 +86,7 @@ Input schema:
   "additionalProperties": false,
   "required": ["kind", "title", "content"],
   "properties": {
+    "project_root": { "type": "string" },
     "kind": { "type": "string" },
     "title": { "type": "string" },
     "content": { "type": "string" },
@@ -100,8 +106,9 @@ Input schema:
 ```json
 {
   "type": "object",
-  "additionalProperties": false,
+	  "additionalProperties": false,
   "properties": {
+    "project_root": { "type": "string" },
     "limit": { "type": "integer", "minimum": 0 }
   }
 }
@@ -116,8 +123,9 @@ Input schema:
 ```json
 {
   "type": "object",
-  "additionalProperties": false,
+	  "additionalProperties": false,
   "properties": {
+    "project_root": { "type": "string" },
     "task": { "type": "string" },
     "budget": { "type": "integer", "minimum": 0 }
   }

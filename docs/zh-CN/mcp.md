@@ -14,6 +14,8 @@ server 通过 stdin/stdout 使用 newline-delimited JSON-RPC。
 
 ## Tools
 
+所有工具都接受可选的 `project_root`，值为仓库/工作区的绝对路径。省略时，MCP server 使用启动时解析出的项目根目录。插件应传入 `project_root`，因为 host 可能让 MCP server 进程长期运行在插件 cache 目录中。
+
 ### `search_memory`
 
 输入 schema：
@@ -24,6 +26,7 @@ server 通过 stdin/stdout 使用 newline-delimited JSON-RPC。
   "additionalProperties": false,
   "required": ["query"],
   "properties": {
+    "project_root": { "type": "string" },
     "query": { "type": "string" },
     "kinds": { "type": "array", "items": { "type": "string" } },
     "limit": { "type": "integer", "minimum": 0 },
@@ -41,8 +44,9 @@ server 通过 stdin/stdout 使用 newline-delimited JSON-RPC。
 ```json
 {
   "type": "object",
-  "additionalProperties": false,
+	  "additionalProperties": false,
   "properties": {
+    "project_root": { "type": "string" },
     "budget": { "type": "integer", "minimum": 0 },
     "kinds": { "type": "array", "items": { "type": "string" } }
   }
@@ -61,6 +65,7 @@ server 通过 stdin/stdout 使用 newline-delimited JSON-RPC。
   "additionalProperties": false,
   "required": ["kind", "title", "content"],
   "properties": {
+    "project_root": { "type": "string" },
     "kind": { "type": "string" },
     "title": { "type": "string" },
     "content": { "type": "string" },
@@ -81,6 +86,7 @@ server 通过 stdin/stdout 使用 newline-delimited JSON-RPC。
   "additionalProperties": false,
   "required": ["kind", "title", "content"],
   "properties": {
+    "project_root": { "type": "string" },
     "kind": { "type": "string" },
     "title": { "type": "string" },
     "content": { "type": "string" },
@@ -100,8 +106,9 @@ enabled Claude Code 与 Codex plugin 可以在 active thread 中由 agent 判断
 ```json
 {
   "type": "object",
-  "additionalProperties": false,
+	  "additionalProperties": false,
   "properties": {
+    "project_root": { "type": "string" },
     "limit": { "type": "integer", "minimum": 0 }
   }
 }
@@ -116,8 +123,9 @@ enabled Claude Code 与 Codex plugin 可以在 active thread 中由 agent 判断
 ```json
 {
   "type": "object",
-  "additionalProperties": false,
+	  "additionalProperties": false,
   "properties": {
+    "project_root": { "type": "string" },
     "task": { "type": "string" },
     "budget": { "type": "integer", "minimum": 0 }
   }

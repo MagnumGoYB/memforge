@@ -41,13 +41,14 @@ func newMCPCmd(streams Streams) *cobra.Command {
 }
 
 func newProjectMCPServer(paths resolvedPaths, proj project.Project) mcp.Server {
+	projectRootProperty := map[string]any{"project_root": stringSchema()}
 	tools := []mcp.Tool{
-		{Name: "search_memory", Description: "Search project memories", InputSchema: objectSchema(map[string]any{"query": stringSchema(), "kinds": arraySchema(stringSchema()), "limit": integerSchema(), "hybrid": booleanSchema()}, []string{"query"})},
-		{Name: "compile_context", Description: "Compile agent-ready project context", InputSchema: objectSchema(map[string]any{"budget": integerSchema(), "kinds": arraySchema(stringSchema())}, nil)},
-		{Name: "save_memory", Description: "Persist a project memory", InputSchema: objectSchema(map[string]any{"kind": stringSchema(), "title": stringSchema(), "content": stringSchema(), "tags": arraySchema(stringSchema())}, []string{"kind", "title", "content"})},
-		{Name: "upsert_project_memory", Description: "Create or update a stable project memory by kind and title", InputSchema: objectSchema(map[string]any{"kind": stringSchema(), "title": stringSchema(), "content": stringSchema(), "tags": arraySchema(stringSchema())}, []string{"kind", "title", "content"})},
-		{Name: "list_constraints", Description: "List high-priority constraint memories", InputSchema: objectSchema(map[string]any{"limit": integerSchema()}, nil)},
-		{Name: "get_project_context", Description: "Compile project context, optionally conditioned on a task", InputSchema: objectSchema(map[string]any{"task": stringSchema(), "budget": integerSchema()}, nil)},
+		{Name: "search_memory", Description: "Search project memories", InputSchema: objectSchema(withMCPProjectRoot(projectRootProperty, map[string]any{"query": stringSchema(), "kinds": arraySchema(stringSchema()), "limit": integerSchema(), "hybrid": booleanSchema()}), []string{"query"})},
+		{Name: "compile_context", Description: "Compile agent-ready project context", InputSchema: objectSchema(withMCPProjectRoot(projectRootProperty, map[string]any{"budget": integerSchema(), "kinds": arraySchema(stringSchema())}), nil)},
+		{Name: "save_memory", Description: "Persist a project memory", InputSchema: objectSchema(withMCPProjectRoot(projectRootProperty, map[string]any{"kind": stringSchema(), "title": stringSchema(), "content": stringSchema(), "tags": arraySchema(stringSchema())}), []string{"kind", "title", "content"})},
+		{Name: "upsert_project_memory", Description: "Create or update a stable project memory by kind and title", InputSchema: objectSchema(withMCPProjectRoot(projectRootProperty, map[string]any{"kind": stringSchema(), "title": stringSchema(), "content": stringSchema(), "tags": arraySchema(stringSchema())}), []string{"kind", "title", "content"})},
+		{Name: "list_constraints", Description: "List high-priority constraint memories", InputSchema: objectSchema(withMCPProjectRoot(projectRootProperty, map[string]any{"limit": integerSchema()}), nil)},
+		{Name: "get_project_context", Description: "Compile project context, optionally conditioned on a task", InputSchema: objectSchema(withMCPProjectRoot(projectRootProperty, map[string]any{"task": stringSchema(), "budget": integerSchema()}), nil)},
 	}
 	handlers := map[string]mcp.Handler{
 		"search_memory":         handleMCPSearch(paths, proj),
@@ -60,6 +61,38 @@ func newProjectMCPServer(paths resolvedPaths, proj project.Project) mcp.Server {
 	return mcp.Server{Tools: tools, Handlers: handlers}
 }
 
+type mcpProjectRootArgs struct {
+	ProjectRoot string `json:"project_root"`
+}
+
+func withMCPProjectRoot(base map[string]any, properties map[string]any) map[string]any {
+	out := make(map[string]any, len(base)+len(properties))
+	for key, value := range base {
+		out[key] = value
+	}
+	for key, value := range properties {
+		out[key] = value
+	}
+	return out
+}
+
+func resolveMCPProject(raw json.RawMessage, defaultPaths resolvedPaths, defaultProject project.Project) (resolvedPaths, project.Project, error) {
+	var args mcpProjectRootArgs
+	if len(raw) > 0 {
+		if err := json.Unmarshal(raw, &args); err != nil {
+			return resolvedPaths{}, project.Project{}, err
+		}
+	}
+	if strings.TrimSpace(args.ProjectRoot) == "" {
+		return defaultPaths, defaultProject, nil
+	}
+	proj, err := project.Detect(args.ProjectRoot)
+	if err != nil {
+		return resolvedPaths{}, project.Project{}, err
+	}
+	return derivePaths(defaultPaths.StorageRoot, proj), proj, nil
+}
+
 func handleMCPSearch(paths resolvedPaths, proj project.Project) mcp.Handler {
 	return func(ctx context.Context, raw json.RawMessage) (any, error) {
 		var args struct {
@@ -69,6 +102,10 @@ func handleMCPSearch(paths resolvedPaths, proj project.Project) mcp.Handler {
 			Hybrid bool     `json:"hybrid"`
 		}
 		if err := json.Unmarshal(raw, &args); err != nil {
+			return nil, err
+		}
+		paths, proj, err := resolveMCPProject(raw, paths, proj)
+		if err != nil {
 			return nil, err
 		}
 		if strings.TrimSpace(args.Query) == "" {
@@ -94,6 +131,10 @@ func handleMCPCompile(paths resolvedPaths, proj project.Project) mcp.Handler {
 			Kinds  []string `json:"kinds"`
 		}
 		if err := json.Unmarshal(raw, &args); err != nil {
+			return nil, err
+		}
+		paths, proj, err := resolveMCPProject(raw, paths, proj)
+		if err != nil {
 			return nil, err
 		}
 		records, err := memory.LoadRecords(paths.MemoriesDir, proj.ID)
@@ -125,6 +166,10 @@ func handleMCPSave(paths resolvedPaths, proj project.Project) mcp.Handler {
 		if err := json.Unmarshal(raw, &args); err != nil {
 			return nil, err
 		}
+		paths, proj, err := resolveMCPProject(raw, paths, proj)
+		if err != nil {
+			return nil, err
+		}
 		kind, err := memory.ParseKind(args.Kind)
 		if err != nil {
 			return nil, err
@@ -154,6 +199,10 @@ func handleMCPUpsert(paths resolvedPaths, proj project.Project) mcp.Handler {
 			Tags    []string `json:"tags"`
 		}
 		if err := json.Unmarshal(raw, &args); err != nil {
+			return nil, err
+		}
+		paths, proj, err := resolveMCPProject(raw, paths, proj)
+		if err != nil {
 			return nil, err
 		}
 		kind, err := memory.ParseKind(args.Kind)
@@ -229,6 +278,10 @@ func handleMCPListConstraints(paths resolvedPaths, proj project.Project) mcp.Han
 				return nil, err
 			}
 		}
+		paths, proj, err := resolveMCPProject(raw, paths, proj)
+		if err != nil {
+			return nil, err
+		}
 		records, err := memory.LoadRecords(paths.MemoriesDir, proj.ID)
 		if err != nil {
 			return nil, err
@@ -258,6 +311,10 @@ func handleMCPProjectContext(paths resolvedPaths, proj project.Project) mcp.Hand
 			Budget int    `json:"budget"`
 		}
 		if err := json.Unmarshal(raw, &args); err != nil {
+			return nil, err
+		}
+		paths, proj, err := resolveMCPProject(raw, paths, proj)
+		if err != nil {
 			return nil, err
 		}
 		records, err := memory.LoadRecords(paths.MemoriesDir, proj.ID)

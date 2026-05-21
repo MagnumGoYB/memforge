@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/MagnumGOYB/memforge/internal/index"
+	"github.com/MagnumGOYB/memforge/internal/project"
 )
 
 func TestExecuteMCPListsTools(t *testing.T) {
@@ -59,6 +60,55 @@ func TestExecuteMCPSaveAndSearchMemory(t *testing.T) {
 	}
 	if len(searchResp.Result.Content) != 1 || !strings.Contains(searchResp.Result.Content[0].Text, "Repository decision") {
 		t.Fatalf("unexpected search response: %s", lines[1])
+	}
+}
+
+func TestExecuteMCPToolArgumentsCanOverrideProjectRoot(t *testing.T) {
+	storage := filepath.Join(t.TempDir(), "storage")
+	t.Setenv("MEMFORGE_HOME", storage)
+	pluginRoot := t.TempDir()
+	projectRoot := t.TempDir()
+	input := strings.Join([]string{
+		`{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"save_memory","arguments":{"project_root":"` + projectRoot + `","kind":"decision","title":"Repository decision","content":"repository framework","tags":["repository"]}}}`,
+		`{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"search_memory","arguments":{"project_root":"` + projectRoot + `","query":"repository","limit":5}}}`,
+	}, "\n") + "\n"
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	code := Execute([]string{"mcp", "--root", pluginRoot}, Streams{Stdin: strings.NewReader(input), Stdout: &stdout, Stderr: &stderr})
+	if code != 0 {
+		t.Fatalf("code=%d stderr=%s", code, stderr.String())
+	}
+	lines := strings.Split(strings.TrimSpace(stdout.String()), "\n")
+	if len(lines) != 2 {
+		t.Fatalf("unexpected responses: %s", stdout.String())
+	}
+	search := decodeMCPTextPayload(t, lines[1])
+	if got := int(search["count"].(float64)); got != 1 {
+		t.Fatalf("search count=%d, want 1: %v", got, search)
+	}
+	expectedProject, err := project.Detect(projectRoot)
+	if err != nil {
+		t.Fatal(err)
+	}
+	pluginProject, err := project.Detect(pluginRoot)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if expectedProject.ID == pluginProject.ID {
+		t.Fatalf("test setup needs distinct project IDs")
+	}
+	if _, err := os.Stat(filepath.Join(storage, "projects", expectedProject.ID, "memories", "decisions.md")); err != nil {
+		t.Fatalf("memory should be stored under override project %s: %v", expectedProject.ID, err)
+	}
+	if _, err := os.Stat(filepath.Join(storage, "projects", pluginProject.ID, "memories", "decisions.md")); !os.IsNotExist(err) {
+		t.Fatalf("memory should not be stored under plugin root project %s: %v", pluginProject.ID, err)
+	}
+	matches, err := filepath.Glob(filepath.Join(storage, "projects", "*", "memories", "decisions.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(matches) != 1 {
+		t.Fatalf("expected one project memory file, got %v", matches)
 	}
 }
 

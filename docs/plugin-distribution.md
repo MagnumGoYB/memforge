@@ -74,7 +74,7 @@ dist/plugins/codex/memforge/.mcp.json
 
 Packaged Codex plugin bundles include the same platform-specific `memforge` runtimes and use `bin/memforge-mcp-launcher.js` through the MCP configuration. Where a Codex host supports local/private marketplace or plugin package installation, users should not need to preinstall the `memforge` CLI on `PATH`.
 
-The Codex MCP configuration uses a plugin-root-relative launcher path. It must not rely on Claude Code-specific environment variables:
+The Codex MCP configuration uses a plugin-root-relative launcher path and `cwd: "."` so the host starts the bundled launcher from the plugin package. Agents must pass the current repository path through the MCP `project_root` argument on tool calls; the long-running plugin server process working directory is not a reliable project root. The Codex configuration must not rely on Claude Code-specific environment variables:
 
 ```json
 {

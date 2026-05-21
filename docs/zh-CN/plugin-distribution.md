@@ -74,7 +74,7 @@ dist/plugins/codex/memforge/.mcp.json
 
 打包后的 Codex plugin bundle 同样包含各平台的 `memforge` runtime，并通过 MCP 配置使用 `bin/memforge-mcp-launcher.js`。当 Codex host 支持本地/私有 marketplace 或 plugin package 安装时，用户不应需要预先把 `memforge` CLI 安装到 `PATH`。
 
-Codex MCP 配置使用相对插件根目录的 launcher 路径，不能依赖 Claude Code 专用环境变量：
+Codex MCP 配置使用相对插件根目录的 launcher 路径，并保留 `cwd: "."`，让 host 从插件包目录启动 bundled launcher。Agent 调用工具时必须通过 MCP `project_root` 参数传入当前仓库路径；长生命周期插件 server 进程的工作目录不能作为可靠项目根目录。Codex 配置不能依赖 Claude Code 专用环境变量：
 
 ```json
 {
