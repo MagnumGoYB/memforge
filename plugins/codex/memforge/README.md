@@ -21,7 +21,7 @@ Use a local/private marketplace or Codex host plugin package flow where supporte
 
 For non-Git marketplace installs, the `check_update` MCP tool only detects newer releases and returns reinstall guidance. It does not promise Codex.app automatic upgrades.
 
-The plugin manifest is at `.codex-plugin/plugin.json`; MCP configuration is in `.mcp.json`. The MCP server starts through `bin/memforge-mcp-launcher.js`, which selects the bundled runtime for the current platform and runs `memforge --no-version-check mcp` from inside the plugin package.
+The plugin manifest is at `.codex-plugin/plugin.json`; MCP configuration is in `.mcp.json`. The MCP server starts through `bin/run-memforge-mcp-launcher.sh`, which locates Node from common install paths, then launches `bin/memforge-mcp-launcher.js` to select the bundled runtime for the current platform and run `memforge --no-version-check mcp` from inside the plugin package.
 
 Optionally set a storage root:
 

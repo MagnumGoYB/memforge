@@ -69,7 +69,7 @@ claude update
 /reload-plugins
 ```
 
-发布版插件包包含各平台的 `memforge` runtime binary，并通过 `bin/memforge-mcp-launcher.js` 启动 MCP。用户不需要先运行 `go install`，也不需要把单独的 `memforge` CLI 放到 `PATH` 上。
+发布版插件包包含各平台的 `memforge` runtime binary，并通过 `bin/run-memforge-mcp-launcher.sh` 启动 MCP；该 wrapper 会先从常见安装路径寻找 Node，再启动 `bin/memforge-mcp-launcher.js`。用户不需要先运行 `go install`，也不需要把单独的 `memforge` CLI 放到 `PATH` 上。
 
 ### 2. Codex 插件安装
 
@@ -90,7 +90,7 @@ codex plugin add memforge@memforge-codex-marketplace
 
 **B. 本地/私有 marketplace 或 Codex host 插件包**
 
-当 Codex host 支持本地/私有 marketplace 或 plugin package 安装时，通过该 host 安装打包后的 `dist/plugins/codex/memforge` bundle。打包 bundle 包含各平台的 `memforge` runtime，并通过 `bin/memforge-mcp-launcher.js` 启动；用户不应需要预先安装 CLI。
+当 Codex host 支持本地/私有 marketplace 或 plugin package 安装时，通过该 host 安装打包后的 `dist/plugins/codex/memforge` bundle。打包 bundle 包含各平台的 `memforge` runtime，并通过 `bin/run-memforge-mcp-launcher.sh` 启动；用户不应需要预先安装 CLI。
 
 对于非 Git marketplace 安装，`check_update` MCP tool 只负责检测新版并返回重装指引，不承诺 Codex.app 自动升级。
 

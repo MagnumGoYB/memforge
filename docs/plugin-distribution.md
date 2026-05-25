@@ -38,8 +38,8 @@ The plugin MCP configuration starts the server through the bundled Node launcher
 
 ```json
 {
-  "command": "node",
-  "args": ["${CLAUDE_PLUGIN_ROOT}/bin/memforge-mcp-launcher.js"],
+  "command": "${CLAUDE_PLUGIN_ROOT}/bin/run-memforge-mcp-launcher.sh",
+  "args": [],
   "env": {
     "MEMFORGE_PLUGIN_ROOT": "${CLAUDE_PLUGIN_ROOT}"
   }
@@ -84,15 +84,15 @@ dist/plugins/codex/memforge/.codex-plugin/plugin.json
 dist/plugins/codex/memforge/.mcp.json
 ```
 
-Git marketplace installs use the Codex plugin source under `plugins/codex/memforge`. Because Git marketplace snapshots do not include generated release binaries, the Codex launcher downloads the matching platform runtime from the GitHub release on first start and then reuses it from the plugin cache. Packaged Codex plugin bundles include the same platform-specific `memforge` runtimes and use `bin/memforge-mcp-launcher.js` through the MCP configuration. Where a Codex host supports local/private marketplace or plugin package installation, users should not need to preinstall the `memforge` CLI on `PATH`.
+Git marketplace installs use the Codex plugin source under `plugins/codex/memforge`. Because Git marketplace snapshots do not include generated release binaries, the Codex launcher downloads the matching platform runtime from the GitHub release on first start and then reuses it from the plugin cache. Packaged Codex plugin bundles include the same platform-specific `memforge` runtimes and use `bin/run-memforge-mcp-launcher.sh` through the MCP configuration. Where a Codex host supports local/private marketplace or plugin package installation, users should not need to preinstall the `memforge` CLI on `PATH`.
 
 For non-Git marketplace installs, `check_update` only detects newer releases and returns reinstall guidance. It does not promise Codex.app automatic upgrades.
 
-The Codex MCP configuration uses a plugin-root-relative executable launcher plus `cwd: "."` so the host starts the bundled launcher from the plugin package without depending on Node to resolve a relative script path. Agents must pass the current repository path through the MCP `project_root` argument on tool calls; the long-running plugin server process working directory is not a reliable project root. The Codex configuration must not rely on Claude Code-specific environment variables:
+The Codex MCP configuration uses a plugin-root-relative shell wrapper plus `cwd: "."` so the host starts the bundled launcher from the plugin package without depending on the GUI application's `PATH` to find Node. Agents must pass the current repository path through the MCP `project_root` argument on tool calls; the long-running plugin server process working directory is not a reliable project root. The Codex configuration must not rely on Claude Code-specific environment variables:
 
 ```json
 {
-  "command": "./bin/memforge-mcp-launcher.js",
+  "command": "./bin/run-memforge-mcp-launcher.sh",
   "args": [],
   "cwd": ".",
   "default_tools_approval_mode": "approve"
@@ -144,7 +144,7 @@ This standalone CLI install is useful for direct MCP registration and shell usag
 Repository validation checks plugin manifests, launcher configuration, packaging, and release workflow structure. Runtime smoke should verify:
 
 1. A marketplace/release plugin can start without a separate `memforge` binary on `PATH`.
-2. `bin/memforge-mcp-launcher.js` selects the bundled runtime for the current platform.
+2. `bin/run-memforge-mcp-launcher.sh` locates Node, then launches `bin/memforge-mcp-launcher.js` to select the bundled runtime for the current platform.
 3. The bundled runtime responds to MCP `tools/list`.
 4. The launcher forwards the project root so writes land under the same project id as `memforge --root /path/to/project`.
 5. `save_memory` can persist a memory.

@@ -10,8 +10,8 @@ The MCP server starts through the bundled Node launcher configured in `.mcp.json
 
 ```json
 {
-  "command": "node",
-  "args": ["${CLAUDE_PLUGIN_ROOT}/bin/memforge-mcp-launcher.js"],
+  "command": "${CLAUDE_PLUGIN_ROOT}/bin/run-memforge-mcp-launcher.sh",
+  "args": [],
   "env": {
     "MEMFORGE_PLUGIN_ROOT": "${CLAUDE_PLUGIN_ROOT}"
   }

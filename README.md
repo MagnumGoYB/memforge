@@ -69,7 +69,7 @@ This is the recommended path for Claude Code users. Install the plugin from a Cl
 /reload-plugins
 ```
 
-The release plugin package includes platform-specific `memforge` runtime binaries and starts MCP through `bin/memforge-mcp-launcher.js`. You do not run `go install` first, and you do not need a separate `memforge` CLI on `PATH`.
+The release plugin package includes platform-specific `memforge` runtime binaries and starts MCP through `bin/run-memforge-mcp-launcher.sh`, which locates Node from common install paths before launching `bin/memforge-mcp-launcher.js`. You do not run `go install` first, and you do not need a separate `memforge` CLI on `PATH`.
 
 ### 2. Codex plugin install
 
@@ -90,7 +90,7 @@ This is the preferred acceptance path because Codex.app can use the Git marketpl
 
 **B. Local/private marketplace or Codex host plugin package**
 
-When your Codex host supports local/private marketplace or plugin package installation, install the packaged `dist/plugins/codex/memforge` bundle through that host. The packaged bundle includes platform-specific `memforge` runtime binaries and uses `bin/memforge-mcp-launcher.js`; users should not need to preinstall the CLI.
+When your Codex host supports local/private marketplace or plugin package installation, install the packaged `dist/plugins/codex/memforge` bundle through that host. The packaged bundle includes platform-specific `memforge` runtime binaries and uses `bin/run-memforge-mcp-launcher.sh`; users should not need to preinstall the CLI.
 
 For non-Git marketplace installs, the `check_update` MCP tool only detects newer releases and returns reinstall guidance. It does not promise Codex.app automatic upgrades.
 

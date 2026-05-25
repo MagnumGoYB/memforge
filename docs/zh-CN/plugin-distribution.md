@@ -38,8 +38,8 @@ claude plugin install memforge@memforge-marketplace
 
 ```json
 {
-  "command": "node",
-  "args": ["${CLAUDE_PLUGIN_ROOT}/bin/memforge-mcp-launcher.js"],
+  "command": "${CLAUDE_PLUGIN_ROOT}/bin/run-memforge-mcp-launcher.sh",
+  "args": [],
   "env": {
     "MEMFORGE_PLUGIN_ROOT": "${CLAUDE_PLUGIN_ROOT}"
   }
@@ -84,15 +84,15 @@ dist/plugins/codex/memforge/.codex-plugin/plugin.json
 dist/plugins/codex/memforge/.mcp.json
 ```
 
-Git marketplace 安装使用 `plugins/codex/memforge` 下的 Codex plugin source。由于 Git marketplace snapshot 不包含生成出来的 release binaries，Codex launcher 会在首次启动时从对应 GitHub release 下载当前平台 runtime，之后复用插件 cache 内的文件。打包后的 Codex plugin bundle 同样包含各平台的 `memforge` runtime，并通过 MCP 配置使用 `bin/memforge-mcp-launcher.js`。当 Codex host 支持本地/私有 marketplace 或 plugin package 安装时，用户不应需要预先把 `memforge` CLI 安装到 `PATH`。
+Git marketplace 安装使用 `plugins/codex/memforge` 下的 Codex plugin source。由于 Git marketplace snapshot 不包含生成出来的 release binaries，Codex launcher 会在首次启动时从对应 GitHub release 下载当前平台 runtime，之后复用插件 cache 内的文件。打包后的 Codex plugin bundle 同样包含各平台的 `memforge` runtime，并通过 MCP 配置使用 `bin/run-memforge-mcp-launcher.sh`。当 Codex host 支持本地/私有 marketplace 或 plugin package 安装时，用户不应需要预先把 `memforge` CLI 安装到 `PATH`。
 
 对于非 Git marketplace 安装，`check_update` 只检测新版并返回重装指引，不承诺 Codex.app 自动升级。
 
-Codex MCP 配置使用相对插件根目录的可执行 launcher，并保留 `cwd: "."`，让 host 从插件包目录启动 bundled launcher，而不依赖 Node 去解析相对脚本路径。Agent 调用工具时必须通过 MCP `project_root` 参数传入当前仓库路径；长生命周期插件 server 进程的工作目录不能作为可靠项目根目录。Codex 配置不能依赖 Claude Code 专用环境变量：
+Codex MCP 配置使用相对插件根目录的 shell wrapper，并保留 `cwd: "."`，让 host 从插件包目录启动 bundled launcher，而不依赖 GUI 宿主的 `PATH` 去找到 Node。Agent 调用工具时必须通过 MCP `project_root` 参数传入当前仓库路径；长生命周期插件 server 进程的工作目录不能作为可靠项目根目录。Codex 配置不能依赖 Claude Code 专用环境变量：
 
 ```json
 {
-  "command": "./bin/memforge-mcp-launcher.js",
+  "command": "./bin/run-memforge-mcp-launcher.sh",
   "args": [],
   "cwd": ".",
   "default_tools_approval_mode": "approve"
@@ -144,7 +144,7 @@ MEMFORGE_INSTALL_DIR="$HOME/bin" MEMFORGE_VERSION="latest" \
 仓库校验会检查 plugin manifests、launcher 配置、打包和 release workflow 结构。运行时 smoke 应验证：
 
 1. marketplace/release plugin 可以在没有单独 `memforge` binary 位于 `PATH` 的情况下启动。
-2. `bin/memforge-mcp-launcher.js` 会为当前平台选择 bundled runtime。
+2. `bin/run-memforge-mcp-launcher.sh` 会先找到 Node，再启动 `bin/memforge-mcp-launcher.js` 为当前平台选择 bundled runtime。
 3. bundled runtime 能响应 MCP `tools/list`。
 4. launcher 会转发 project root，使写入落到与 `memforge --root /path/to/project` 相同的 project id。
 5. `save_memory` 可以持久化 memory。

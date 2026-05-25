@@ -392,7 +392,7 @@ func assertClaudeMCPLauncher(t *testing.T, path string) {
 	if !ok {
 		t.Fatalf("%s missing memforge MCP server", path)
 	}
-	if server.Command != "node" || len(server.Args) != 1 || server.Args[0] != "${CLAUDE_PLUGIN_ROOT}/bin/memforge-mcp-launcher.js" {
+	if server.Command != "${CLAUDE_PLUGIN_ROOT}/bin/run-memforge-mcp-launcher.sh" || len(server.Args) != 0 {
 		t.Fatalf("unexpected MCP launcher in %s: %#v", path, server)
 	}
 	if server.Env["MEMFORGE_PLUGIN_ROOT"] != "${CLAUDE_PLUGIN_ROOT}" {
@@ -400,6 +400,17 @@ func assertClaudeMCPLauncher(t *testing.T, path string) {
 	}
 	if read(t, filepath.Join(filepath.Dir(path), "bin", "memforge-mcp-launcher.js")) == "" {
 		t.Fatalf("empty MCP launcher referenced by %s", path)
+	}
+	wrapperPath := filepath.Join(filepath.Dir(path), "bin", "run-memforge-mcp-launcher.sh")
+	if read(t, wrapperPath) == "" {
+		t.Fatalf("empty MCP wrapper referenced by %s", path)
+	}
+	info, err := os.Stat(filepath.Join(repoRoot(t), wrapperPath))
+	if err != nil {
+		t.Fatalf("stat %s: %v", wrapperPath, err)
+	}
+	if info.Mode()&0o111 == 0 {
+		t.Fatalf("MCP wrapper must be executable: %s mode=%#o", wrapperPath, info.Mode().Perm())
 	}
 	launcherLib := read(t, filepath.Join(filepath.Dir(path), "bin", "memforge-mcp-launcher-lib.js"))
 	for _, expected := range []string{"MEMFORGE_VERSION_CHECK_LATEST", "MEMFORGE_NO_VERSION_CHECK", "releases/tag/v"} {
@@ -425,7 +436,7 @@ func assertCodexMCPLauncher(t *testing.T, path string) {
 	if !ok {
 		t.Fatalf("%s missing memforge MCP server", path)
 	}
-	if server.Command != "./bin/memforge-mcp-launcher.js" || len(server.Args) != 0 || server.CWD != "." {
+	if server.Command != "./bin/run-memforge-mcp-launcher.sh" || len(server.Args) != 0 || server.CWD != "." {
 		t.Fatalf("unexpected Codex MCP launcher in %s: %#v", path, server)
 	}
 	if _, ok := server.Env["MEMFORGE_PLUGIN_ROOT"]; ok {
@@ -444,6 +455,17 @@ func assertCodexMCPLauncher(t *testing.T, path string) {
 	}
 	if info.Mode()&0o111 == 0 {
 		t.Fatalf("Codex MCP launcher must be executable: %s mode=%#o", launcherPath, info.Mode().Perm())
+	}
+	wrapperPath := filepath.Join(filepath.Dir(path), "bin", "run-memforge-mcp-launcher.sh")
+	if read(t, wrapperPath) == "" {
+		t.Fatalf("empty MCP wrapper referenced by %s", path)
+	}
+	wrapperInfo, err := os.Stat(filepath.Join(repoRoot(t), wrapperPath))
+	if err != nil {
+		t.Fatalf("stat %s: %v", wrapperPath, err)
+	}
+	if wrapperInfo.Mode()&0o111 == 0 {
+		t.Fatalf("Codex MCP wrapper must be executable: %s mode=%#o", wrapperPath, wrapperInfo.Mode().Perm())
 	}
 	launcherLib := read(t, filepath.Join(filepath.Dir(path), "bin", "memforge-mcp-launcher-lib.js"))
 	for _, expected := range []string{"MEMFORGE_VERSION_CHECK_LATEST", "MEMFORGE_NO_VERSION_CHECK", "releases/tag/v"} {
