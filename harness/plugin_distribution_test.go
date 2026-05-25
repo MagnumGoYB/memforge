@@ -425,7 +425,7 @@ func assertCodexMCPLauncher(t *testing.T, path string) {
 	if !ok {
 		t.Fatalf("%s missing memforge MCP server", path)
 	}
-	if server.Command != "node" || len(server.Args) != 1 || server.Args[0] != "./bin/memforge-mcp-launcher.js" || server.CWD != "." {
+	if server.Command != "./bin/memforge-mcp-launcher.js" || len(server.Args) != 0 || server.CWD != "." {
 		t.Fatalf("unexpected Codex MCP launcher in %s: %#v", path, server)
 	}
 	if _, ok := server.Env["MEMFORGE_PLUGIN_ROOT"]; ok {
@@ -434,8 +434,16 @@ func assertCodexMCPLauncher(t *testing.T, path string) {
 	if server.DefaultToolsApprovalMode != "approve" {
 		t.Fatalf("unexpected MCP approval mode in %s: %q", path, server.DefaultToolsApprovalMode)
 	}
-	if read(t, filepath.Join(filepath.Dir(path), "bin", "memforge-mcp-launcher.js")) == "" {
+	launcherPath := filepath.Join(filepath.Dir(path), "bin", "memforge-mcp-launcher.js")
+	if read(t, launcherPath) == "" {
 		t.Fatalf("empty MCP launcher referenced by %s", path)
+	}
+	info, err := os.Stat(filepath.Join(repoRoot(t), launcherPath))
+	if err != nil {
+		t.Fatalf("stat %s: %v", launcherPath, err)
+	}
+	if info.Mode()&0o111 == 0 {
+		t.Fatalf("Codex MCP launcher must be executable: %s mode=%#o", launcherPath, info.Mode().Perm())
 	}
 	launcherLib := read(t, filepath.Join(filepath.Dir(path), "bin", "memforge-mcp-launcher-lib.js"))
 	for _, expected := range []string{"MEMFORGE_VERSION_CHECK_LATEST", "MEMFORGE_NO_VERSION_CHECK", "releases/tag/v"} {

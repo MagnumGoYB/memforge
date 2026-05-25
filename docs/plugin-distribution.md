@@ -88,12 +88,12 @@ Git marketplace installs use the Codex plugin source under `plugins/codex/memfor
 
 For non-Git marketplace installs, `check_update` only detects newer releases and returns reinstall guidance. It does not promise Codex.app automatic upgrades.
 
-The Codex MCP configuration uses a plugin-root-relative launcher path and `cwd: "."` so the host starts the bundled launcher from the plugin package. Agents must pass the current repository path through the MCP `project_root` argument on tool calls; the long-running plugin server process working directory is not a reliable project root. The Codex configuration must not rely on Claude Code-specific environment variables:
+The Codex MCP configuration uses a plugin-root-relative executable launcher plus `cwd: "."` so the host starts the bundled launcher from the plugin package without depending on Node to resolve a relative script path. Agents must pass the current repository path through the MCP `project_root` argument on tool calls; the long-running plugin server process working directory is not a reliable project root. The Codex configuration must not rely on Claude Code-specific environment variables:
 
 ```json
 {
-  "command": "node",
-  "args": ["./bin/memforge-mcp-launcher.js"],
+  "command": "./bin/memforge-mcp-launcher.js",
+  "args": [],
   "cwd": ".",
   "default_tools_approval_mode": "approve"
 }

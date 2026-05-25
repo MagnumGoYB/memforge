@@ -88,12 +88,12 @@ Git marketplace 安装使用 `plugins/codex/memforge` 下的 Codex plugin source
 
 对于非 Git marketplace 安装，`check_update` 只检测新版并返回重装指引，不承诺 Codex.app 自动升级。
 
-Codex MCP 配置使用相对插件根目录的 launcher 路径，并保留 `cwd: "."`，让 host 从插件包目录启动 bundled launcher。Agent 调用工具时必须通过 MCP `project_root` 参数传入当前仓库路径；长生命周期插件 server 进程的工作目录不能作为可靠项目根目录。Codex 配置不能依赖 Claude Code 专用环境变量：
+Codex MCP 配置使用相对插件根目录的可执行 launcher，并保留 `cwd: "."`，让 host 从插件包目录启动 bundled launcher，而不依赖 Node 去解析相对脚本路径。Agent 调用工具时必须通过 MCP `project_root` 参数传入当前仓库路径；长生命周期插件 server 进程的工作目录不能作为可靠项目根目录。Codex 配置不能依赖 Claude Code 专用环境变量：
 
 ```json
 {
-  "command": "node",
-  "args": ["./bin/memforge-mcp-launcher.js"],
+  "command": "./bin/memforge-mcp-launcher.js",
+  "args": [],
   "cwd": ".",
   "default_tools_approval_mode": "approve"
 }

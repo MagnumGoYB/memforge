@@ -1,8 +1,8 @@
 {
   "mcpServers": {
     "memforge": {
-      "command": "node",
-      "args": ["./bin/memforge-mcp-launcher.js"],
+      "command": "./bin/memforge-mcp-launcher.js",
+      "args": [],
       "cwd": ".",
       "default_tools_approval_mode": "approve"
     }
